@@ -1,0 +1,66 @@
+RewriteEngine On
+RewriteBase /
+# Chuyển đổi các yêu cầu không phải là tệp hoặc thư mục thành .php theo đường dẫn gốc
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)/?$ $1.php [L]
+
+# Chuyển hướng trang Home đến file Index.php
+RewriteRule ^Home$ /Index.php [L]
+
+# Chuyển hướng các URL liên quan đến đăng nhập và đăng ký
+RewriteRule ^Auth/Login$ /Pages/Auth/Login.php [L]
+RewriteRule ^Auth/Register$ /Pages/Auth/Register.php [L]
+RewriteRule ^Auth/Logout$ /Pages/Auth/Logout.php [L]
+RewriteRule ^Auth/ForgotPassword$ /Pages/Auth/ForgotPassword.php [L]
+
+# Chuyển hướng các URL liên quan đến tài khoản người dùng
+RewriteRule ^Users/Profile$ /Pages/Users/Profile.php [L]
+RewriteRule ^Users/Admin$ /Pages/Users/Admin.php [L]
+RewriteRule ^Users/Payment$ /Pages/Users/Payment.php [L]
+RewriteRule ^Users/Gold$ /Pages/Users/Gold.php [L]
+RewriteRule ^Users/History$ /Pages/Users/History.php [L]
+RewriteRule ^Users/ChangePassword$ /Pages/Users/ChangePassword.php [L]
+RewriteRule ^Others/Downloads$ /Pages/Others/Downloads.php [L]
+RewriteRule ^Others/Sukien$ /Pages/Others/Sukien.php [L]
+RewriteRule ^Others/Tinhnang$ /Pages/Others/Tinhnang.php [L]
+RewriteRule ^Others/Mocnap$ /Pages/Others/Mocnap.php [L]
+RewriteRule ^Others/Top$ /Pages/Others/Top.php [L]
+
+#Api
+RewriteRule ^Api/Active$ /Api/Users/Active.php [L]
+RewriteRule ^Api/Gold$ /Api/Users/Gold.php [L]
+RewriteRule ^Api/Active$ /Api/Users/Active.php [L]
+RewriteRule ^Api/Password$ /Api/Users/Password.php [L]
+RewriteRule ^Api/Callback$ /Api/Users/Callback.php [L]
+RewriteRule ^Api/Card$ /Api/Users/Card.php [L]
+RewriteRule ^Api/Email$ /Api/Users/Email.php [L]
+RewriteRule ^Api/CardHistory$ /Api/Users/CardHistory.php [L]
+RewriteRule ^Api/AtmHistory /Api/Users/AtmHistory.php [L]
+RewriteRule ^Bank/Cron$ /Api/Bank/Cron.php [L]
+RewriteRule ^Bank/Login$ /Api/Bank/Login.php [L]
+RewriteCond %{REQUEST_URI} !^/Pages/Downloads/ [NC]
+RewriteRule ^Downloads/(.*)$ /Pages/Downloads/$1 [L]
+
+# Chuyển hướng đến trang Index.php khi file không tồn tại
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ /Index.php [L]
+
+# Chuyển hướng đến trang error.php khi file không tồn tại
+ErrorDocument 404 /Home
+
+# Tắt truy cập vào thư mục
+Options -Indexes
+
+# Thêm loại tệp .IPA
+AddType application/octet-stream .ipa
+
+# Bảo vệ tệp .htaccess
+<Files .htaccess>
+    order allow,deny
+    deny from all
+</Files>
+
+<FilesMatch "\.(jpg|jpeg|png|gif|svg|css|js)$">
+    Header set Cache-Control "max-age=31536000"
+</FilesMatch>

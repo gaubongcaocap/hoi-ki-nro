@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "name": "PlayerOne",
+    "level": 30,
+    "power": 1000000,
+    "items": [
+      {
+        "name": "Kiếm gỗ",
+        "tempId": 101,
+        "quantity": 1,
+        "icon": "placeholder_item.png",
+        "options": [{ "id": 47, "param": 5 }]
+      },
+      {
+        "name": "Nhẫn bạc",
+        "tempId": 201,
+        "quantity": 1,
+        "icon": "placeholder_item.png",
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "PlayerTwo",
+    "level": 50,
+    "power": 5000000,
+    "items": [
+      {
+        "name": "Áo da",
+        "tempId": 301,
+        "quantity": 2,
+        "icon": "placeholder_item.png",
+        "options": []
+      },
+      {
+        "name": "Giáp sắt",
+        "tempId": 302,
+        "quantity": 1,
+        "icon": "placeholder_item.png",
+        "options": [{ "id": 33, "param": 200 }]
+      }
+    ]
+  }
+]

@@ -1,0 +1,75 @@
+[
+  {
+    "npcId": 1,
+    "npcName": "Thương nhân",
+    "npcIcon": "placeholder_npc.png",
+    "tabs": [
+      {
+        "name": "Vũ khí",
+        "items": [
+          {
+            "name": "Kiếm gỗ",
+            "tempId": 101,
+            "cost": 1000,
+            "currency": "vàng",
+            "icon": "placeholder_item.png",
+            "options": [
+              { "id": 47, "param": 5 }
+            ]
+          },
+          {
+            "name": "Kiếm sắt",
+            "tempId": 102,
+            "cost": 5000,
+            "currency": "vàng",
+            "icon": "placeholder_item.png",
+            "options": []
+          }
+        ]
+      },
+      {
+        "name": "Trang sức",
+        "items": [
+          {
+            "name": "Nhẫn bạc",
+            "tempId": 201,
+            "cost": 2000,
+            "currency": "ngọc",
+            "icon": "placeholder_item.png",
+            "options": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "npcId": 2,
+    "npcName": "Thợ rèn",
+    "npcIcon": "placeholder_npc.png",
+    "tabs": [
+      {
+        "name": "Giáp",
+        "items": [
+          {
+            "name": "Áo da",
+            "tempId": 301,
+            "cost": 1500,
+            "currency": "vàng",
+            "icon": "placeholder_item.png",
+            "options": []
+          },
+          {
+            "name": "Giáp sắt",
+            "tempId": 302,
+            "cost": 7000,
+            "currency": "vàng",
+            "icon": "placeholder_item.png",
+            "options": [
+              { "id": 33, "param": 200 }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

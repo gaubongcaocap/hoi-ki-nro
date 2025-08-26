@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thông tin người chơi</title>
+  <!-- Use TailwindCSS CDN for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    .label {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-semibold mb-4">Chi tiết người chơi</h1>
+    <div id="player-info" class="bg-white rounded shadow p-4"></div>
+    <div id="player-items" class="bg-white rounded shadow p-4 mt-4"></div>
+    <div id="player-tasks" class="bg-white rounded shadow p-4 mt-4"></div>
+    <div id="player-side-tasks" class="bg-white rounded shadow p-4 mt-4"></div>
+    <div id="player-itemtimes" class="bg-white rounded shadow p-4 mt-4"></div>
+  </div>
+  <script>
+    // Extract player ID from query string (e.g. ?id=123)
+    function getQueryId() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      return id ? parseInt(id, 10) : null;
+    }
+
+    // Fetch all players and render the one matching the id
+    async function loadPlayer() {
+      const playerId = getQueryId();
+      if (!playerId) {
+        document.getElementById('player-info').innerHTML = '<p>Không tìm thấy ID người chơi.</p>';
+        return;
+      }
+      try {
+        const resp = await fetch('/api/players');
+        const players = await resp.json();
+        const player = players.find(p => p.id === playerId);
+        if (!player) {
+          document.getElementById('player-info').innerHTML = '<p>Không tìm thấy người chơi trong dữ liệu.</p>';
+          return;
+        }
+        renderPlayer(player);
+      } catch (err) {
+        document.getElementById('player-info').innerHTML = '<p>Lỗi tải dữ liệu người chơi.</p>';
+        console.error(err);
+      }
+    }
+
+    function renderPlayer(p) {
+      // Player basic info
+      const infoEl = document.getElementById('player-info');
+      infoEl.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">${p.name}</h2>
+        <p><span class="label">Mã người chơi (ID):</span> ${p.id}</p>
+        <p><span class="label">Cấp/giới tính:</span> ${p.level}</p>
+        <p><span class="label">Sức mạnh (Power):</span> ${p.power}</p>
+        <p><span class="label">HP hiện tại / tối đa:</span> ${p.hp} / ${p.hpBase}</p>
+        <p><span class="label">MP hiện tại / tối đa:</span> ${p.mp} / ${p.mpBase}</p>
+      `;
+      // Player stats
+      if (p.stats) {
+        let statsHtml = '<h3 class="text-lg font-semibold mt-4 mb-2">Chỉ số</h3>';
+        if (Array.isArray(p.stats)) {
+          statsHtml += '<ul class="list-disc list-inside text-sm">' + p.stats.map((val, idx) => `<li>Chỉ số ${idx}: ${val}</li>`).join('') + '</ul>';
+        } else if (typeof p.stats === 'object') {
+          statsHtml += '<ul class="list-disc list-inside text-sm">' + Object.entries(p.stats).map(([k, v]) => `<li>${k}: ${v}</li>`).join('') + '</ul>';
+        } else {
+          statsHtml += `<p class="text-sm">${String(p.stats)}</p>`;
+        }
+        infoEl.innerHTML += statsHtml;
+      }
+      // Player items
+      const itemsEl = document.getElementById('player-items');
+      let itemsHtml = '<h3 class="text-lg font-semibold mb-2">Vật phẩm</h3>';
+      if (p.items && p.items.length > 0) {
+        itemsHtml += '<div class="grid grid-cols-2 md:grid-cols-3 gap-2">' + p.items.map(it => {
+          const optsDesc = (it.options || []).map(opt => `Option ${opt.id}: +${opt.param}`).join(', ');
+          return `
+            <div class="flex items-start p-2 border border-gray-200 rounded">
+              <img src="${it.icon}" alt="${it.name}" class="w-8 h-8 mr-2">
+              <div class="text-sm">
+                <div class="font-medium">${it.name}</div>
+                <div class="text-gray-600">x${it.quantity}</div>
+                ${optsDesc ? `<div class="text-xs text-gray-500">${optsDesc}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('') + '</div>';
+      } else {
+        itemsHtml += '<p class="text-sm">Không có vật phẩm nào.</p>';
+      }
+      itemsEl.innerHTML = itemsHtml;
+      // Tasks
+      const tasksEl = document.getElementById('player-tasks');
+      let tasksHtml = '<h3 class="text-lg font-semibold mb-2">Nhiệm vụ</h3>';
+      if (p.tasks && p.tasks.length > 0) {
+          tasksHtml += '<ul class="list-disc list-inside text-sm">' + p.tasks.map(t => `<li><pre class="whitespace-pre-wrap">${JSON.stringify(t, null, 2)}</pre></li>`).join('') + '</ul>';
+      } else {
+          tasksHtml += '<p class="text-sm">Không có nhiệm vụ.</p>';
+      }
+      tasksEl.innerHTML = tasksHtml;
+      // Side tasks
+      const sideEl = document.getElementById('player-side-tasks');
+      let sideHtml = '<h3 class="text-lg font-semibold mb-2">Nhiệm vụ phụ</h3>';
+      if (p.sideTasks && p.sideTasks.length > 0) {
+          sideHtml += '<ul class="list-disc list-inside text-sm">' + p.sideTasks.map(t => `<li><pre class="whitespace-pre-wrap">${JSON.stringify(t, null, 2)}</pre></li>`).join('') + '</ul>';
+      } else {
+          sideHtml += '<p class="text-sm">Không có nhiệm vụ phụ.</p>';
+      }
+      sideEl.innerHTML = sideHtml;
+      // Item times
+      const itTimesEl = document.getElementById('player-itemtimes');
+      let itTimesHtml = '<h3 class="text-lg font-semibold mb-2">Thời gian vật phẩm</h3>';
+      if (p.itemTimes && p.itemTimes.length > 0) {
+          itTimesHtml += `<pre class="whitespace-pre-wrap text-sm">${JSON.stringify(p.itemTimes, null, 2)}</pre>`;
+      } else {
+          itTimesHtml += '<p class="text-sm">Không có dữ liệu thời gian vật phẩm.</p>';
+      }
+      itTimesEl.innerHTML = itTimesHtml;
+    }
+    // Run on load
+    document.addEventListener('DOMContentLoaded', loadPlayer);
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+/build/
+/dist/
+/nbbuild/
+/nbdist/
+/out/
+/admin-page/node_modules/
+/target/
+/src_2/
+/nbproject/private/
+*.log
+*.tmp
+*.temp
+*.bak
+.DS_Store
+Thumbs.db
+
+# IDE
+/.idea/
+/*.iml
+.vscode/
+admin-page/db_config.json

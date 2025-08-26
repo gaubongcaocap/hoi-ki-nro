@@ -1,0 +1,39 @@
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+sysinfo.txt
+
+# Unity cache
+/[Aa]sset[Ss]tore/
+
+# Visual Studio / Rider
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# Build results
+*.apk
+*.aab
+*.unitypackage
+
+# Crashlytics
+crashlytics-build.properties
+
+# Gradle cache (Android)
+.gradle/
+**/gradle-wrapper.jar
+.gradle/*

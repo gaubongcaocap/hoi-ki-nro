@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Viewer</title>
+  <!-- Import TailwindCSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Game Admin Tool</h1>
+  <!-- Navigation bar -->
+  <div id="nav-bar" class="flex bg-gray-800 text-white">
+    <button id="nav-shop" class="flex-1 py-3 text-center bg-gray-700 hover:bg-gray-600">Shop</button>
+    <button id="nav-players" class="flex-1 py-3 text-center hover:bg-gray-700">Players</button>
+    <button id="nav-giftcode" class="flex-1 py-3 text-center hover:bg-gray-700">Giftcode</button>
+    <!-- New Mail navigation button -->
+    <button id="nav-mail" class="flex-1 py-3 text-center hover:bg-gray-700">Mail</button>
+  </div>
+
+  <!-- Shop section -->
+  <div id="shop-section" style="display:block;">
+    <div id="container">
+      <div id="npc-list"></div>
+      <div id="shop-content">
+        <h2 id="shop-title">Chọn một NPC để xem shop</h2>
+        <div id="tabs"></div>
+        <div id="items-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Players section -->
+  <div id="players-section" style="display:none; padding:16px;">
+    <h2>Danh sách người chơi</h2>
+    <div id="players-list"></div>
+  </div>
+
+  <!-- Giftcode section -->
+  <div id="giftcode-section" style="display:none; padding:16px;">
+    <h2>Giftcode</h2>
+    <!-- List existing giftcodes -->
+    <div id="giftcode-list" style="margin-bottom:20px;"></div>
+    <!-- Form to create new giftcode -->
+    <h3>Tạo giftcode mới</h3>
+    <div id="giftcode-form-container"></div>
+  </div>
+
+  <!-- Mail section -->
+  <div id="mail-section" style="display:none; padding:16px;">
+    <h2>Gửi vật phẩm qua thư</h2>
+    <div id="mail-form-container"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

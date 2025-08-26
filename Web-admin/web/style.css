@@ -1,0 +1,201 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f9f9f9;
+}
+h1 {
+  margin: 0;
+  padding: 16px;
+  background: #333;
+  color: #fff;
+  font-size: 24px;
+}
+#container {
+  display: flex;
+  height: calc(100vh - 56px);
+}
+#npc-list {
+  width: 240px;
+  border-right: 1px solid #ddd;
+  background: #fff;
+  overflow-y: auto;
+}
+#npc-list .npc-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+#npc-list .npc-item:hover {
+  background: #f5f5f5;
+}
+#npc-list .npc-item img {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+#shop-content {
+  flex-grow: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+#shop-title {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+#tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.tab {
+  padding: 6px 12px;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  background: #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tab:hover {
+  background: #ddd;
+}
+.tab.active {
+  background: #ccc;
+  font-weight: bold;
+}
+#items-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.item-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.item-card img {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+}
+.item-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+/* Nút chỉnh sửa trong mỗi ô item */
+.edit-item-btn {
+  display: block;            /* chuyển về block để căn giữa */
+  margin: 8px auto 0;        /* đẩy nút xuống dưới và căn giữa */
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff; /* màu xanh dương nhạt */
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 30px;
+}
+
+.item-card img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 48px;
+  height: 48px;
+}
+
+.edit-item-btn:hover {
+  background-color: #0056b3; /* đậm hơn khi hover */
+}
+
+.edit-item-btn:active {
+  background-color: #004085; /* đậm nhất khi bấm */
+}
+
+.item-cost {
+  font-size: 14px;
+  color: #555;
+  text-align: right;
+}
+.options {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #777;
+  /* Align option text to the left inside the item card */
+  text-align: right;
+}
+
+/* Modal overlay and box for editing items */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Giftcode list styling */
+#giftcode-list .giftcode-item {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+#giftcode-list .giftcode-item:hover {
+  background: #f5f5f5;
+}
+#giftcode-list .giftcode-header {
+  font-weight: bold;
+}
+#giftcode-list .giftcode-details {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #444;
+}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.modal{background:#fff;color:#111;padding:16px;border-radius:12px;max-width:900px;width:90%;max-height:85vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+.modal.dark{background:#111;color:#eee;}
+.modal.dark .text-gray-700{color:#ddd;}
+.tabs{display:flex;gap:6px;border-bottom:1px solid #e5e7eb;margin-bottom:4px;}
+.tab-btn{background:#f3f4f6;border:1px solid #e5e7eb;padding:6px 10px;border-radius:8px 8px 0 0;}
+.tab-btn.active{background:#fff;border-bottom-color:#fff;}
+.modal.dark .tab-btn{background:#1f2937;border-color:#374151;color:#eee;}
+.modal.dark .tab-btn.active{background:#111;border-bottom-color:#111;}
+
+/* Shop button text color fix */
+button, .btn, .btn-primary{color:#fff;}
+.view-player-detail-btn{color:#2563eb;}
+
+/* Simple switch */
+.switch{position:relative;display:inline-block;width:46px;height:24px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.2s;border-radius:24px}
+.slider:before{position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.2s;border-radius:50%}
+.switch input:checked + .slider{background:#2563eb}
+.switch input:checked + .slider:before{transform:translateX(22px)}

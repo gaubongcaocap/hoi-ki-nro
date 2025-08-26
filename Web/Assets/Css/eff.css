@@ -1,0 +1,40 @@
+#backTop {
+    position: fixed;
+    bottom: 60px;
+    right: 2px;
+    z-index: 9999;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s ease-out;
+    opacity: 0;
+    border: 1px solid #797979;
+    border: none;
+}
+
+#backTop span {
+    color: #453c3c;
+    display: block;
+    font-weight: 900;
+}
+
+#backTopimg:hover {
+    opacity: 0.8 !important;
+}
+
+#backTop.show {
+    opacity: 1;
+}
+
+@media (max-width: 500px) {
+    #backTop.show {
+        display: block;
+    }
+}
+
+
+#snowcanvas {
+    position: fixed;
+    z-index: 0;
+}
