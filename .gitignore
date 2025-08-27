@@ -46,3 +46,4 @@ crashlytics-build.properties
 **/gradle-wrapper.jar
 .gradle/*
 Client/UserSettings/Layouts/default-2022.dwlt
+Server/login_log.txt
