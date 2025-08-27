@@ -320,7 +320,7 @@ public class Session_ME : ISession
 		}
 	}
          
-	private async void NetworkInit()
+	private void NetworkInit()
 	{
 		isCancel = false;
 		connecting = true;
@@ -328,21 +328,13 @@ public class Session_ME : ISession
 		connected = true;
 		try
 		{
-			if (await Check())
-			{
-				doConnect(host, port);
-				messageHandler.onConnectOK(isMainSession);
-				return;
-			}
-			throw new Exception();
+			doConnect(host, port);
+			messageHandler.onConnectOK(isMainSession);
 		}
 		catch (Exception)
 		{
-			if (messageHandler != null)
-			{
-				close();
-				messageHandler.onConnectionFail(isMainSession);
-			}
+			close();
+			messageHandler.onConnectionFail(isMainSession);
 		}
 	}
 

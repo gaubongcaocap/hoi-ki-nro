@@ -29,14 +29,10 @@ public class ServerListScreen : mScreen, IActionListener
 	public static Command cmdDeleteRMS;
 
 	public static bool isMultiSever = false;
-	// public static string ListIP = ModFunc.Decrypt("$KA`GoX(%*isVyKImG4b03%42&uQgXmTR!7KO#ai+G$o`wW(LjGlPumM28zbw;^$!%x~#r6WG#W`LhRROJRIf?~V%a-dnIjVe6@S5Q}UHX2N=6@#J50Ngxr6", 17775);
+	
+	public static string ListIP = ModFunc.Decrypt("xIYdd3{<=7rKw!q2cV#~bwyyc4Htu9Rhe??^hM6=bAd?iuys7*k}?mwhX^I<QBOnDf;GYzF<V8qA@OQ!rPkveNXlb0^ZDThTv|EtoZx66rRQ~D5!(GN<g?`f", 261005);
 
-	// public static string linkDefault = ((Rms.loadRMSString("ipserver") == null) ? ModFunc.Decrypt("3g0s;VP1}rn%UrxAnFnnAVh;rLF_^7^+qGdfzU4F`x4Z6mlEi3Qg42GMNpB!EeNp}y<hKl_#rvo18bOlgIMN$mNL(C_2QOvXplxJ", 17775) : Rms.loadRMSString("ipserver"));
-
-	public static string ListIP = "Local:localhost:14445,0,0,0";
-
-	// public static string linkDefault = ((Rms.loadRMSString("ipserver") == null) ? ModFunc.Decrypt("o`J%+OF;N3=uaqd))M9PcV3E*2-1+Vvq(Rp+oswaqs_m+ngx`(@fnGFEgVLSdR$gJIbac*FzKFOF+YLGab|m)vW=P>zDH2E$)JzP", 261005) : Rms.loadRMSString("ipserver"));
-	public static string linkDefault = ((Rms.loadRMSString("ipserver") == null) ? ModFunc.Decrypt("@3v^eJqV~G%rm5Og#DHhfv$>s_;o0u>~5YRhef63%znA7L{icS1Z)|5WvJl{Ilr9Xg_Hi0hNoh*t<S08xOFG5^Ubo}*<x!m=X68h&1qls3{Oz7gDpYw07cN~52(CC)qigrX*{1|K6zVh", 261005) : Rms.loadRMSString("ipserver"));
+	public static string linkDefault = ((Rms.loadRMSString("ipserver") == null) ? ModFunc.Decrypt("xIYdd3{<=7rKw!q2cV#~bwyyc4Htu9Rhe??^hM6=bAd?iuys7*k}?mwhX^I<QBOnDf;GYzF<V8qA@OQ!rPkveNXlb0^ZDThTv|EtoZx66rRQ~D5!(GN<g?`f", 261005) : Rms.loadRMSString("ipserver"));
 
 	public const sbyte languageVersion = 2;
 
