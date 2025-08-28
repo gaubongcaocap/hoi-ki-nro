@@ -4108,28 +4108,28 @@ public class GameScr : mScreen, IChatable
 					return;
 				}
 			}
-			if (ModFunc.isActiveNapTuan)
-			{
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w - 130, 0, imgNapTuan.getWidth(), imgNapTuan.getHeight()) && GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-				{
-					QuaNapTuan.sendOpenUI();
-					QuaNapTuan.update();
-					return;
-				}
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w - 273, GameCanvas.h - 40, QuaNapTuan.nhan.getWidth(), QuaNapTuan.nhan.getHeight()) && GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
-				{
-					QuaNapTuan.isNhan = true;
-					QuaNapTuan.update();
-					GameCanvas.clearAllPointerEvent();
-					return;
-				}
-				if (GameCanvas.isPointerHoldIn(GameCanvas.w - 110, 60, QuaNapTuan.btnExit.getWidth(), QuaNapTuan.btnExit.getHeight()) && GameCanvas.isPointerJustRelease)
-				{
-					QuaNapTuan.isNapTuan = false;
-					GameCanvas.clearAllPointerEvent();
-					return;
-				}
-			}
+			// if (ModFunc.isActiveNapTuan)
+			// {
+			// 	if (GameCanvas.isPointerHoldIn(GameCanvas.w - 130, 0, imgNapTuan.getWidth(), imgNapTuan.getHeight()) && GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
+			// 	{
+			// 		QuaNapTuan.sendOpenUI();
+			// 		QuaNapTuan.update();
+			// 		return;
+			// 	}
+			// 	if (GameCanvas.isPointerHoldIn(GameCanvas.w - 273, GameCanvas.h - 40, QuaNapTuan.nhan.getWidth(), QuaNapTuan.nhan.getHeight()) && GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
+			// 	{
+			// 		QuaNapTuan.isNhan = true;
+			// 		QuaNapTuan.update();
+			// 		GameCanvas.clearAllPointerEvent();
+			// 		return;
+			// 	}
+			// 	if (GameCanvas.isPointerHoldIn(GameCanvas.w - 110, 60, QuaNapTuan.btnExit.getWidth(), QuaNapTuan.btnExit.getHeight()) && GameCanvas.isPointerJustRelease)
+			// 	{
+			// 		QuaNapTuan.isNapTuan = false;
+			// 		GameCanvas.clearAllPointerEvent();
+			// 		return;
+			// 	}
+			// }
 			if (GameCanvas.isPointerHoldIn(0, 0, 60, 50) && GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
 			{
 				Char.myCharz().cmdMenu?.performAction();
@@ -5166,10 +5166,10 @@ public class GameScr : mScreen, IChatable
 			{
 				g.drawImageScale(QuayTamBao.quay, GameCanvas.w - 100, 0, 45, 45, 0);
 			}
-			if (ModFunc.isActiveNapTuan)
-			{
-				g.drawImage(imgNapTuan, GameCanvas.w - 130, 0, 0);
-			}
+			// if (ModFunc.isActiveNapTuan)
+			// {
+			// 	g.drawImage(imgNapTuan, GameCanvas.w - 130, 0, 0);
+			// }
 			if (mResources.language == 1)
 			{
 				long second = mSystem.currentTimeMillis() - deltaTime;

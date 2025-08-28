@@ -328,13 +328,13 @@ public class Session_ME : ISession
 		connected = true;
 		try
 		{
-			doConnect(host, port);
-			messageHandler.onConnectOK(isMainSession);
+				doConnect(host, port);
+				messageHandler.onConnectOK(isMainSession);
 		}
 		catch (Exception)
 		{
-			close();
-			messageHandler.onConnectionFail(isMainSession);
+				close();
+				messageHandler.onConnectionFail(isMainSession);
 		}
 	}
 

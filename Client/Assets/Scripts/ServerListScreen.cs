@@ -29,7 +29,7 @@ public class ServerListScreen : mScreen, IActionListener
 	public static Command cmdDeleteRMS;
 
 	public static bool isMultiSever = false;
-	
+
 	public static string ListIP = ModFunc.Decrypt("xIYdd3{<=7rKw!q2cV#~bwyyc4Htu9Rhe??^hM6=bAd?iuys7*k}?mwhX^I<QBOnDf;GYzF<V8qA@OQ!rPkveNXlb0^ZDThTv|EtoZx66rRQ~D5!(GN<g?`f", 261005);
 
 	public static string linkDefault = ((Rms.loadRMSString("ipserver") == null) ? ModFunc.Decrypt("xIYdd3{<=7rKw!q2cV#~bwyyc4Htu9Rhe??^hM6=bAd?iuys7*k}?mwhX^I<QBOnDf;GYzF<V8qA@OQ!rPkveNXlb0^ZDThTv|EtoZx66rRQ~D5!(GN<g?`f", 261005) : Rms.loadRMSString("ipserver"));

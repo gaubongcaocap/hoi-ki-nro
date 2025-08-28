@@ -1715,7 +1715,7 @@ public class Controller : IMessageHandler
 				Char.myCharz().cCriticalFull = msg.reader().readByte();
 				Char.myCharz().cTiemNang = msg.reader().readLong();
 				Char.myCharz().expForOneAdd = msg.reader().readShort();
-				Char.myCharz().cDefGoc = msg.reader().DefShotToLong();
+				Char.myCharz().cDefGoc = msg.reader().readShort();
 				Char.myCharz().cCriticalGoc = msg.reader().readByte();
                 Char.myCharz().tlSubSD = msg.reader().readInt();
                 Char.myCharz().tlSDCM = msg.reader().readInt();
@@ -1972,7 +1972,7 @@ public class Controller : IMessageHandler
 				Char.myPetz().cHPGoc = msg.reader().readIntToLongDQT();
 				Char.myPetz().cMPGoc = msg.reader().readIntToLongDQT();
 				Char.myPetz().cDamGoc = msg.reader().readIntToLongDQT();
-				Char.myPetz().cDefGoc = msg.reader().DefShotToLong();
+				Char.myPetz().cDefGoc = msg.reader().readShort();
 				Char.myPetz().cCriticalGoc = msg.reader().readByteToInt();
 				break;
 			case -37:

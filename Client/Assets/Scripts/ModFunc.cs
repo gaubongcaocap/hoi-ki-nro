@@ -2378,7 +2378,7 @@ public class ModFunc : IActionListener
 	public void ChangeFPSTarget()
 	{
 		Rms.saveRMSInt("isHighFps",1);
-		Application.targetFrameRate = 60;
+			Application.targetFrameRate = 60;
 	}
 
 	public static void changeStatusEffectInven()
