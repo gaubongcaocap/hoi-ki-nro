@@ -1711,12 +1711,14 @@ public class Controller : IMessageHandler
 				Char.myCharz().mpFrom1000TiemNang = msg.reader().readByte();
 				Char.myCharz().damFrom1000TiemNang = msg.reader().readByte();
 				Char.myCharz().cDamFull = msg.reader().readIntToLongDQT();
-				Char.myCharz().cDefull = msg.reader().readIntToLongDQT();
+				Char.myCharz().cDefull = msg.reader().readInt();
 				Char.myCharz().cCriticalFull = msg.reader().readByte();
 				Char.myCharz().cTiemNang = msg.reader().readLong();
 				Char.myCharz().expForOneAdd = msg.reader().readShort();
 				Char.myCharz().cDefGoc = msg.reader().DefShotToLong();
 				Char.myCharz().cCriticalGoc = msg.reader().readByte();
+                Char.myCharz().tlSubSD = msg.reader().readInt();
+                Char.myCharz().tlSDCM = msg.reader().readInt();
 				InfoDlg.hide();
 				try
 				{
@@ -1847,7 +1849,7 @@ public class Controller : IMessageHandler
 				Char.myPetz().cStamina = msg.reader().readShort();
 				Char.myPetz().cMaxStamina = msg.reader().readShort();
 				Char.myPetz().cCriticalFull = msg.reader().readByte();
-				Char.myPetz().cDefull = msg.reader().DefShotToLong();
+				Char.myPetz().cDefull = msg.reader().readShort();
 				Char.myPetz().arrPetSkill = new Skill[msg.reader().readByte()];
 				for (int num154 = 0; num154 < Char.myPetz().arrPetSkill.Length; num154++)
 				{
@@ -1935,7 +1937,7 @@ public class Controller : IMessageHandler
 				Char.MyPet2z().cStamina = msg.reader().readShort();
 				Char.MyPet2z().cMaxStamina = msg.reader().readShort();
 				Char.MyPet2z().cCriticalFull = msg.reader().readByte();
-				Char.MyPet2z().cDefull = msg.reader().readIntToLongDQT();
+                Char.MyPet2z().cDefull = msg.reader().readShort();
 				Char.MyPet2z().arrPetSkill = new Skill[msg.reader().readByte()];
 				for (int k = 0; k < Char.MyPet2z().arrPetSkill.Length; k++)
 				{
@@ -4558,7 +4560,7 @@ public class Controller : IMessageHandler
             Mob.arrMobTemplate[b2].mobTemplateId = b2;
             Mob.arrMobTemplate[b2].type = d.readByte();
             Mob.arrMobTemplate[b2].name = d.readUTF();
-            Mob.arrMobTemplate[b2].hp = d.readIntToLongDQT();
+            Mob.arrMobTemplate[b2].hp = d.readInt();
             Mob.arrMobTemplate[b2].rangeMove = d.readByte();
             Mob.arrMobTemplate[b2].speed = d.readByte();
             Mob.arrMobTemplate[b2].dartType = d.readByte();

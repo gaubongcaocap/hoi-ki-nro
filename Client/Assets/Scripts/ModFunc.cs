@@ -29,7 +29,7 @@ public class ModFunc : IActionListener
 
 	private static readonly ModFunc Instance = new ModFunc();
 
-	public static string homeUrl = "NRO Giải Trí";
+	public static string homeUrl = "Huyền Ký Ngọc Rồng";
 
 	public static bool ModNotLogo = false;
 
@@ -530,8 +530,8 @@ public class ModFunc : IActionListener
 		Time.timeScale = 1.5f;
 		listSkillsAuto.Clear();
 		listItemAuto.Clear();
-		isHighFps = Rms.loadRMSInt("isHighFps") != 0;
-		isInventory = Rms.loadRMSInt("inventory") == 1;
+		isHighFps = true;
+        isInventory = true;
 		isEffectInven = Rms.loadRMSInt("effectinven") == 1;
 		GiamDungLuong = Rms.loadRMSInt("background") == 1;
 		AnPlayer = Rms.loadRMSInt("anplayer") == 1;
@@ -2377,15 +2377,8 @@ public class ModFunc : IActionListener
 
 	public void ChangeFPSTarget()
 	{
-		Rms.saveRMSInt("isHighFps", isHighFps ? 1 : 0);
-		if (isHighFps)
-		{
-			Application.targetFrameRate = 60;
-		}
-		else
-		{
-			Application.targetFrameRate = 30;
-		}
+		Rms.saveRMSInt("isHighFps",1);
+		Application.targetFrameRate = 60;
 	}
 
 	public static void changeStatusEffectInven()

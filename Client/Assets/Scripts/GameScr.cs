@@ -846,8 +846,8 @@ public class GameScr : mScreen, IChatable
 
 	public static void loadBg()
 	{
-		QuayTamBao.loadImage();
-		QuaNapTuan.LoadImage();
+		// QuayTamBao.loadImage();
+		// QuaNapTuan.LoadImage();
 		fra_PVE_Bar_0 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_0.png"), 6, 15);
 		fra_PVE_Bar_1 = new FrameImage(mSystem.loadImage("/mainImage/i_pve_bar_1.png"), 38, 21);
 		imgVS = mSystem.loadImage("/mainImage/i_vs.png");
@@ -890,7 +890,7 @@ public class GameScr : mScreen, IChatable
 			imgFire1 = GameCanvas.loadImage("/mainImage/myTexture2dfirebtn1.png");
 			imgModFunc = GameCanvas.loadImage("/mainImage/imgModFuc.png");
 			imgCommandChat = GameCanvas.loadImage("/mainImage/imgCommandChat.png");
-			imgNapTuan = GameCanvas.loadImage("/mainImage/NapNgay.png");
+			// imgNapTuan = GameCanvas.loadImage("/mainImage/NapNgay.png");
 		}
 		flyTextX = new int[5];
 		flyTextY = new int[5];

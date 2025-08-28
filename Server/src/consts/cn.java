@@ -14,7 +14,7 @@ public class cn {
 //    public final static int ID_TOPSM = 56868;//SV3
 //    public final static int ID_TOPSM = 356;//SV1
     public final static String MANAP = "NTD ";
-    public static boolean readInt = true;
+    public static boolean readInt = false;
 
     private static class ________________________GHBUG______________________ { 
 

@@ -301,7 +301,7 @@ public class ServerListScreen : mScreen, IActionListener
 			GameCanvas.paintBGGameScr(g);
 		}
 		int num2 = 2;
-		mFont.tahoma_7_white.drawStringBorder(g, "v" + GameMidlet.VERSION + " (x" + mGraphics.zoomLevel + ")", GameCanvas.w - 2, num2 + 20, 1, mFont.tahoma_7_grey);
+		mFont.tahoma_7_white.drawStringBorder(g, "v" + GameMidlet.VERSION1 + " (x" + mGraphics.zoomLevel + ")", GameCanvas.w - 2, num2 + 20, 1, mFont.tahoma_7_grey);
 		string empty = string.Empty;
 		empty = ((testConnect != 0) ? (empty + nameServer[ipSelect] + " connected") : (empty + nameServer[ipSelect] + " disconnect"));
 		if (mSystem.isTest)

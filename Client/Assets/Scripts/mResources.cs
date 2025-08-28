@@ -967,6 +967,10 @@ public class mResources
 	public static string KI = string.Empty;
 
 	public static string hit_point = string.Empty;
+	
+	public static string sub_dame = string.Empty;
+	
+	public static string crit_dame = string.Empty;
 
 	public static string armor = string.Empty;
 

@@ -645,24 +645,27 @@ public class Service {
             Message msg;
             try {
                 msg = new Message(-42);
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hpg), cn.readInt);
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mpg), cn.readInt);
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.dameg), cn.readInt);
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hpMax), cn.readInt);// hp full
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mpMax), cn.readInt);// mp full
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hp), cn.readInt);// hp
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mp), cn.readInt);// mp
-                msg.writer().writeByte(player.nPoint.speed);// speed
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hpg), cn.readInt); // hp gốc
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mpg), cn.readInt); // mp gốc
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.dameg), cn.readInt); // dame gốc
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hpMax), cn.readInt); // hp full
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mpMax), cn.readInt); // mp full
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.hp), cn.readInt); // hp hiện tại
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.mp), cn.readInt); // mp hiện tại
+                msg.writer().writeByte(player.nPoint.speed);
                 msg.writer().writeByte(20);
                 msg.writer().writeByte(20);
                 msg.writer().writeByte(1);
-                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.dame), cn.readInt);// dam base
-                msg.writer().writeInt(player.nPoint.def);// def full
-                msg.writer().writeByte(player.nPoint.crit);// crit full
+                msg.writeLongByEmti(Util.maxIntValue(player.nPoint.dame), cn.readInt); // dame base
+                msg.writer().writeInt(player.nPoint.def);// def full (int)
+                msg.writer().writeByte(player.nPoint.crit);// crit full (byte)
                 msg.writer().writeLong(player.nPoint.tiemNang);
-                msg.writer().writeShort(100);
-                msg.writer().writeShort(player.nPoint.defg);
+                msg.writer().writeShort(100);// expForOneAdd?
+                msg.writer().writeShort(player.nPoint.defg); // defg (short)
                 msg.writer().writeByte(player.nPoint.critg);
+                // Gửi thêm hai chỉ số phần trăm
+                msg.writer().writeInt(player.nPoint.tlGiap);  // Giảm sát thương
+                msg.writer().writeInt(player.nPoint.tlSDCM);   // ST Crit
                 player.sendMessage(msg);
                 msg.cleanup();
             } catch (Exception e) {

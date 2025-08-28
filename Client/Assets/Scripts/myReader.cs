@@ -191,10 +191,6 @@ public class myReader
 		{
 			return readDouble();//double  // build đủ 3 bản apk pc ios nhé 
 		}
-		if (ModFunc.isReadInt)//int
-		{
-			return readInt();
-		}
 		return readLong();// nếu 2 cái trên false thì đọc long 
 	}
 

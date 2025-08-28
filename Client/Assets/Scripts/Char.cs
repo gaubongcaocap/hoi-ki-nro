@@ -1256,6 +1256,11 @@ public class Char : IMapObject
 
 	public int tlDef;
 
+    // Giảm sát thương (phần trăm) truyền từ server
+    public int tlSubSD;
+    // Sát thương chí mạng (phần trăm) truyền từ server
+    public int tlSDCM;
+
 	public int tlPst;
 
 	public int tlNeDon;
@@ -1427,12 +1432,14 @@ public class Char : IMapObject
 		{
 			clevel = strLevel.Length - 1;
 		}
-		string text = strLevel[clevel] + "+" + cLevelPercent / 100.0 + "." + cLevelPercent % 100.0 + "%";
-		if (text.Length > 23 && text.IndexOf("cấp ") >= 0)
-		{
-			text = Res.replace(text, "cấp ", "c");
-		}
-		return text;
+        double percent = cLevelPercent / 100.0;
+        double truncated = System.Math.Floor(percent * 100.0) / 100.0;
+        string text = strLevel[clevel] + "+" + truncated.ToString("0.00") + "%";
+        if (text.Length > 23 && text.IndexOf("cấp ") >= 0)
+        {
+            text = Res.replace(text, "cấp ", "c");
+        }
+        return text;
 	}
 
 	public int avatarz()

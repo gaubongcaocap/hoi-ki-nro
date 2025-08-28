@@ -3184,6 +3184,14 @@ public class Panel : IActionListener, IChatable
 
 	private void updateKeyScrollView()
 	{
+		// Nếu đang ở tab trang bị Pet (type 21 hoặc 28) và tab 0 hoặc 2,
+		// bỏ qua flag isInventory và gọi trực tiếp hàm cập nhật đầy đủ
+		if ((type == 21 || type == 28) && (currentTabIndex == 0 || currentTabIndex == 2))
+		{
+			updateKeyScrollView222222();
+			return;
+		}
+
 		if (currentListLength <= 0)
 		{
 			return;
@@ -4089,8 +4097,14 @@ public class Panel : IActionListener, IChatable
 	private void setTabPetInventory(bool isPet2)
 	{
 		ITEM_HEIGHT = 30;
-		Item[] arrItemBody = (isPet2 ? Char.MyPet2z() : Char.myPetz()).arrItemBody;
-		currentListLength = arrItemBody.Length;
+        // Determine which pet inventory to display and ensure the array is not null
+        Char pet = isPet2 ? Char.MyPet2z() : Char.myPetz();
+        Item[] arrItemBody = (pet != null ? pet.arrItemBody : null);
+        if (arrItemBody == null)
+        {
+            arrItemBody = new Item[0];
+        }
+        currentListLength = arrItemBody.Length;
 		cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
 		cmy = (cmtoY = cmyLast[currentTabIndex]);
 		if (cmyLim < 0)
@@ -4976,31 +4990,31 @@ public class Panel : IActionListener, IChatable
 			if (i == 0)
 			{
 				SmallImage.drawSmallImage(g, 567, num5 + 4, num6 + 4, 0, 0);
-				string st = mResources.HP + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cHP);
+				string st = mResources.HP + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cHPGoc);
 				mFont.tahoma_7b_blue.drawString(g, st, num2 + 5, num3 + 3, 0);
 			}
 			if (i == 1)
 			{
 				SmallImage.drawSmallImage(g, 569, num5 + 4, num6 + 4, 0, 0);
-				string st2 = mResources.KI + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cMP);
+				string st2 = mResources.KI + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cMPGoc);
 				mFont.tahoma_7b_blue.drawString(g, st2, num2 + 5, num3 + 3, 0);
 			}
 			if (i == 2)
 			{
 				SmallImage.drawSmallImage(g, 568, num5 + 4, num6 + 4, 0, 0);
-				string st3 = mResources.hit_point + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cDamFull);
+				string st3 = mResources.hit_point + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cDamGoc);
 				mFont.tahoma_7b_blue.drawString(g, st3, num2 + 5, num3 + 3, 0);
 			}
 			if (i == 3)
 			{
 				SmallImage.drawSmallImage(g, 721, num5 + 4, num6 + 4, 0, 0);
-				string st4 = mResources.armor + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cDefull);
+				string st4 = mResources.armor + " " + mResources.root + ": " + NinjaUtil.getMoneys(pet.cDefGoc);
 				mFont.tahoma_7b_blue.drawString(g, st4, num2 + 5, num3 + 3, 0);
 			}
 			if (i == 4)
 			{
 				SmallImage.drawSmallImage(g, 719, num5 + 4, num6 + 4, 0, 0);
-				string st5 = mResources.critical + " " + mResources.root + ": " + pet.cCriticalFull + "%";
+				string st5 = mResources.critical + " " + mResources.root + ": " + pet.cCriticalGoc + "%";
 				int num10 = pet.cCriticalGoc;
 				if (num10 > t_tiemnang.Length - 1)
 				{
@@ -5035,7 +5049,13 @@ public class Panel : IActionListener, IChatable
 		g.setColor(16711680);
 		g.setClip(xScroll, yScroll, wScroll, hScroll);
 		g.translate(0, -cmy);
-		Item[] arrItemBody = (isPet2 ? Char.MyPet2z() : Char.myPetz()).arrItemBody;
+        // Lấy danh sách đồ trang bị của pet và bảo vệ null
+        Char pet = isPet2 ? Char.MyPet2z() : Char.myPetz();
+        Item[] arrItemBody = (pet != null ? pet.arrItemBody : null);
+        if (arrItemBody == null)
+        {
+            arrItemBody = new Item[0];
+        }
 		for (int i = 0; i < arrItemBody.Length; i++)
 		{
 			int num = i;
@@ -7112,14 +7132,18 @@ public class Panel : IActionListener, IChatable
 
 	private void paintToolInfo(mGraphics g)
 	{
-		mFont.tahoma_7b_white.drawString(g, mResources.dragon_ball + " " + GameMidlet.VERSION, 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7_yellow.drawString(g, (Char.myCharz().isTichXanh ? "     " : string.Empty) + Char.myCharz().cName, 60, 16, mFont.LEFT, mFont.tahoma_7_grey);
+		
+		mFont.tahoma_7b_white.drawString(g, mResources.dragon_ball + " v" + GameMidlet.VERSION1, 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		string plName = Char.myCharz().cName;
+        mFont.tahoma_7b_white.drawString(g, plName, 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
 		if (Char.myCharz().isTichXanh)
 		{
-			ModFunc.PaintTicks(g, 58, 17);
+            int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
+			int tickX = X + 58 + nameWidth + 5;
+            ModFunc.PaintTicks(g, tickX, 17);
 		}
 		string text = ((!GameCanvas.loginScr.tfUser.getText().Equals(string.Empty)) ? GameCanvas.loginScr.tfUser.getText() : mResources.not_register_yet);
-		mFont.tahoma_7_yellow.drawString(g, mResources.account_server + " " + ServerListScreen.nameServer[ServerListScreen.ipSelect] + ": " + text, 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7_yellow.drawString(g, mResources.account_server + " " + ServerListScreen.nameServer[ServerListScreen.ipSelect], 60, 35, mFont.LEFT, mFont.tahoma_7_grey);
 	}
 
 	private void paintGiaoDichInfo(mGraphics g)
@@ -7169,10 +7193,17 @@ public class Panel : IActionListener, IChatable
 
 	private void paintCharInfo(mGraphics g, Char c)
 	{
-		mFont.tahoma_7b_white.drawString(g, (c.isTichXanh ? "     " : string.Empty) + c.cName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		string plName = c.cName;
+		// mFont.tahoma_7b_white.drawString(g, (c.isTichXanh ? "     " : string.Empty) + c.cName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+        mFont.tahoma_7b_white.drawString(g, plName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+
 		if (c.isTichXanh)
 		{
-			ModFunc.PaintTicks(g, X + 60, 5);
+			// ModFunc.PaintTicks(g, X + 60, 5);
+            int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
+            // Add a small gap (5 pixels) after the name before drawing the tick
+            int tickX = X + 60 + nameWidth + 5;
+            ModFunc.PaintTicks(g, tickX, 5);
 		}
 		if (c.cMaxStamina > 0)
 		{
@@ -7339,10 +7370,33 @@ public class Panel : IActionListener, IChatable
 
 	private void paintItemBodyBagInfo(mGraphics g)
 	{
-		mFont.tahoma_7_yellow.drawString(g, mResources.HP + ": " + NinjaUtil.getMoneys(Char.myCharz().cHP) + " / " + NinjaUtil.getMoneys(Char.myCharz().cHPFull), X + 60, 2, mFont.LEFT, mFont.tahoma_7_grey);
-		mFont.tahoma_7_yellow.drawString(g, mResources.KI + ": " + NinjaUtil.getMoneys(Char.myCharz().cMP) + " / " + NinjaUtil.getMoneys(Char.myCharz().cMPFull), X + 60, 14, mFont.LEFT, mFont.tahoma_7_grey);
-		mFont.tahoma_7_yellow.drawString(g, mResources.hit_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cDamFull), X + 60, 26, mFont.LEFT, mFont.tahoma_7_grey);
-		mFont.tahoma_7_yellow.drawString(g, mResources.armor + ": " + NinjaUtil.getMoneys(Char.myCharz().cDefull) + ", " + mResources.critical + ": " + Char.myCharz().cCriticalFull + "%", X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
+		double cHp = Char.myCharz().cHP;
+		double cHPFull = Char.myCharz().cHPFull;
+		double cMP = Char.myCharz().cMP;
+		double cMPFull = Char.myCharz().cMPFull;
+		// HP
+		string hpStr = mResources.HP + ": " + Res.formatNumber((long)cHp) + " / " + Res.formatNumber((long)cHPFull);
+		// KI
+		string kiStr = mResources.KI + ": " + Res.formatNumber((long)cMP) + " / " + Res.formatNumber((long)cMPFull);
+		// Sức đánh
+		string dmgStr = mResources.hit_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cDamFull);
+		// Giáp
+		// string giapStr = mResources.armor + ": " + NinjaUtil.getMoneys(Char.myCharz().cDefull);
+		// Tỉ lệ Crit
+		string critStr = mResources.critical + ": " + Char.myCharz().cCriticalFull + "%";
+		// Tỉ lệ giảm ST
+		string giamStStr = mResources.sub_dame + ": " + Char.myCharz().tlSubSD + "%";
+		// Sát thương Crit
+		string stCritStr = mResources.crit_dame + ": " + Char.myCharz().tlSDCM + "%";
+
+		string infoLine1 = dmgStr + ", " + critStr;
+		string infoLine2 = giamStStr + ", " + stCritStr;
+
+		// Paint
+		mFont.tahoma_7_yellow.drawString(g, hpStr, X + 60, 2, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7_yellow.drawString(g, kiStr, X + 60, 14, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7_yellow.drawString(g, infoLine1, X + 60, 26, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7_yellow.drawString(g, infoLine2, X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 	}
 
 	private void paintTopInfo(mGraphics g)
@@ -7565,8 +7619,8 @@ public class Panel : IActionListener, IChatable
 	private void paintPetStatusInfo(mGraphics g, bool isPet2)
 	{
 		Char pet = (isPet2 ? Char.MyPet2z() : Char.myPetz());
-		mFont.tahoma_7b_white.drawString(g, "HP: " + NinjaUtil.getMoneys(pet.cHP) + "/" + NinjaUtil.getMoneys(pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7b_white.drawString(g, "MP: " + NinjaUtil.getMoneys(pet.cMP) + "/" + NinjaUtil.getMoneys(pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, "HP: " + Res.formatNumber((long)pet.cHP) + "/" + Res.formatNumber((long)pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, "MP: " + Res.formatNumber((long)pet.cMP) + "/" + Res.formatNumber((long)pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
 		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + NinjaUtil.getMoneys(pet.cCriticalFull) + "   " + mResources.armor + ": " + NinjaUtil.getMoneys(pet.cDefull), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
 		mFont.tahoma_7_yellow.drawString(g, mResources.status + ": " + strStatus[pet.petStatus], X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 	}
@@ -12014,28 +12068,34 @@ public class Panel : IActionListener, IChatable
 		int num3 = 15;
 		switch (idOpt)
 		{
-		case 102:
-		{
-			int maxStar = 8;
-			if (imgo_17 != null)
-			{
-				if (param > 0)
-				{
-					g.drawImage(imgo_17, x - num2 + 1 + w - imgo_17.getWidth(), y - num2 + h - imgo_17.getHeight());
-				}
-				else if (param > maxStar - 3)
-				{
-					g.drawImage(imgo_18, x - num2 + 1 + w - imgo_18.getWidth(), y - num2 + h - imgo_18.getHeight());
-				}
-				mFont.tahoma_7b_white.drawString(g, string.Empty + param, x - num3 + w - imgo_17.getWidth() + 1, y - 20 + h - imgo_17.getHeight(), 1);
-			}
-			else
-			{
-				imgo_17 = mSystem.loadImage("/mainImage/star.png");
-				imgo_18 = mSystem.loadImage("/mainImage/star8.png");
-			}
-			break;
-		}
+            case 102:
+            {
+                if (imgo_17 != null)
+                {
+                    if (imgo_18 == null)
+                    {
+                        imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+                    }
+                    int baseX = x - num2 + 1 + w - imgo_17.getWidth();
+                    int baseY = y - num2 + h - imgo_17.getHeight();
+                    if (param > 0)
+                    {
+                        Image starImg = (param > 7) ? imgo_18 : imgo_17;
+                        g.drawImage(starImg, baseX, baseY);
+                        // string levelStr = param.ToString();
+                        // int strW = mFont.tahoma_7b_red.getWidth(levelStr);
+                        // int txtX = baseX - strW - 2;
+                        // int txtY = baseY;
+                        // mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
+                    }
+                }
+                else
+                {
+                    imgo_17 = mSystem.loadImage("/mainImage/star.png");
+                    imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+                }
+                break;
+            }
 		case 34:
 			if (imgo_0 != null)
 			{
@@ -12111,28 +12171,26 @@ public class Panel : IActionListener, IChatable
 				int maxStar = 8;
 				if (imgo_17 != null)
 				{
-					if(param>0){
-				    if(imgo_19 != null){
-					for (int l = param; l < maxStar; l++)
+					if (imgo_19 == null)
 					{
-						g.drawImage(imgo_19, x + w - imgo_19.getWidth() + num5 + l * 3, y + h - imgo_19.getHeight());
-					}
-					}else{
 						imgo_19 = mSystem.loadImage("/mainImage/starE.png");
 					}
-					for (int i = 0; i < Math.min(param, maxStar - 1); i++)
+					if (imgo_18 == null)
 					{
-						g.drawImage(imgo_17, x + w - imgo_17.getWidth() + num5 + i * 3, y + h - imgo_17.getHeight());
+						imgo_18 = mSystem.loadImage("/mainImage/star8.png");
 					}
-					if (param > maxStar - 3)
+					int baseX = x + w - imgo_17.getWidth() + num3;
+					int baseY = y + h - imgo_17.getHeight() - num5;
+					if (param > 0)
 					{
-						for (int j = maxStar - 1; j < param; j++)
-						{
-							g.drawImage(imgo_18, x + w - imgo_18.getWidth() + num5 + j * 3, y + h - imgo_18.getHeight());
-						}
+						Image starImg = (param > 7) ? imgo_18 : imgo_17;
+						g.drawImage(starImg, baseX, baseY);
+						string levelStr = param.ToString();
+						int strW = mFont.tahoma_7b_red.getWidth(levelStr);
+						int txtX = baseX - strW - 2;
+						int txtY = baseY;
+						mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + param, x + w - imgo_17.getWidth() + num5 + 1, y + h - imgo_17.getHeight() - 1, 1);
-				}
 				}
 				else
 				{

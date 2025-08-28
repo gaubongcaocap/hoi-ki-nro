@@ -16,6 +16,8 @@ public class GameMidlet
 
 	public static string VERSION = ((Rms.loadRMSString("version") == null) ? "2.4.0" : Rms.loadRMSString("version"));
 
+	public static string VERSION1 = "1.0.0";
+
 	public static GameCanvas gameCanvas;
 
 	public static GameMidlet instance;

@@ -217,8 +217,8 @@ public class T1 : mResources
 		mResources.pay_card2 = "Nạp thẻ";
 		mResources.serial_blank = "Vui lòng nhập số serial";
 		mResources.card_code_blank = "Vui lòng nhập mã code";
-		mResources.billion = "Tỉ";
-		mResources.million = "Tr";
+		mResources.billion = " Tỉ";
+		mResources.million = " Tr";
 		mResources.MENU = "Menu";
 		mResources.CLOSE = "Đóng";
 		mResources.ON = "Bật";
@@ -461,10 +461,12 @@ public class T1 : mResources
 		mResources.can_buy_from_Uron3 = ". Ngoài ra bạn có thể mua Bí Kíp từ Urôn để học nhanh";
 		mResources.HP = "HP";
 		mResources.KI = "KI";
-		mResources.hit_point = "Sức đánh";
+		mResources.hit_point = "SĐ";
+		mResources.sub_dame = "Giảm ST";
+		mResources.crit_dame = "ST Crit";
 		mResources.armor = "Giáp";
 		mResources.vitality = "Thể lực";
-		mResources.critical = "Chí mạng";
+		mResources.critical = "Crit";
 		mResources.cap_do = "Cấp độ";
 		mResources.KI_consume = "KI tiêu hao: ";
 		mResources.cooldown = "Hồi chiêu";
