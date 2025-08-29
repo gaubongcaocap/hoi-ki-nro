@@ -1460,7 +1460,7 @@ public class Effect_End
 		for (int i = 0; i < skill_arr_1.Length; i++)
 		{
 			string nameImg = "Skills_" + skill_id + "_" + typePaint + "_" + skill_arr_1[i];
-			Debug.Log("NAME: " + nameImg);
+			// Debug.Log("NAME: " + nameImg);
 			FrameImage frameImage = mSystem.getFraImage(nameImg);
 			if (frameImage == null)
 			{

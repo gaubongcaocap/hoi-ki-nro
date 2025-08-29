@@ -217,8 +217,9 @@ public class T1 : mResources
 		mResources.pay_card2 = "Nạp thẻ";
 		mResources.serial_blank = "Vui lòng nhập số serial";
 		mResources.card_code_blank = "Vui lòng nhập mã code";
-		mResources.billion = " Tỉ";
-		mResources.million = " Tr";
+		mResources.billion = "Tỉ";
+		mResources.million = "Tr";
+		mResources.hundred = "K";
 		mResources.MENU = "Menu";
 		mResources.CLOSE = "Đóng";
 		mResources.ON = "Bật";
@@ -384,7 +385,8 @@ public class T1 : mResources
 		mResources.cannot_find_clan = "Không tìm thấy bang";
 		mResources.ago = "trước";
 		mResources.findingClan = "Đang tìm bang";
-		mResources.trade = "Giao dịch";
+		mResources.trade = "Giao dịch thường";
+		mResources.tradeP2P = "Giao dịch P2P";
 		mResources.not_lock_trade = " chưa khóa giao dịch";
 		mResources.not_lock_trade_upper = "Chưa khóa giao dịch";
 		mResources.locked_trade = " đã khóa giao dịch";

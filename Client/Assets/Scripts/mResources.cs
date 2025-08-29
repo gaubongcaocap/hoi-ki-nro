@@ -413,6 +413,8 @@ public class mResources
 
 	public static string million = string.Empty;
 
+	public static string hundred = string.Empty;
+
 	public static string MENU = string.Empty;
 
 	public static string CLOSE = string.Empty;
@@ -813,6 +815,8 @@ public class mResources
 	public static string findingClan = string.Empty;
 
 	public static string trade = string.Empty;
+	
+	public static string tradeP2P = string.Empty;
 
 	public static string not_lock_trade = string.Empty;
 

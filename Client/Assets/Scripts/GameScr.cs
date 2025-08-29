@@ -1866,6 +1866,7 @@ public class GameScr : mScreen, IChatable
 		{
 			vPlayerMenu.addElement(new Command(mResources.make_friend, 11112, Char.myCharz().charFocus));
 			vPlayerMenu.addElement(new Command(mResources.trade, 11113, Char.myCharz().charFocus));
+			vPlayerMenu.addElement(new Command(mResources.tradeP2P, 11119, Char.myCharz().charFocus));
 		}
 		if (Char.myCharz().clan != null && Char.myCharz().role < 2 && Char.myCharz().charFocus.clanID == -1)
 		{
@@ -6441,6 +6442,15 @@ public class GameScr : mScreen, IChatable
 			break;
 		}
 		case 11113:
+		{
+			Char char2 = (Char)p;
+			if (char2 != null)
+			{
+				Service.gI().giaodich(0, char2.charID, -1, -1);
+			}
+			break;
+		}
+		case 11119:
 		{
 			Char char2 = (Char)p;
 			if (char2 != null)

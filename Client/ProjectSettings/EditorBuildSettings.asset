@@ -8,4 +8,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/NROL.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/NRO2.unity
+    guid: b363ec8316a8dfa45b88406152cacc88
+  - enabled: 1
+    path: Assets/Scenes/NRO3.unity
+    guid: 74fb42418013cee4dac3de44e60a66f3
+  - enabled: 1
+    path: Assets/Scenes/NRO4.unity
+    guid: baf38869cabc1714abf50fad527b0bbb
+  - enabled: 1
+    path: Assets/Scenes/NRO5.unity
+    guid: 472cf606cdb8e1a45bf90d381920b9c9
+  - enabled: 1
+    path: Assets/Scenes/NRO6.unity
+    guid: 757b66056dd8bfa48a85c431f2bdaa23
   m_configObjects: {}

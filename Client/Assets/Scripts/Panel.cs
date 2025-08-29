@@ -187,6 +187,120 @@ public class Panel : IActionListener, IChatable
 
 	public static string[] strAuto = new string[1] { mResources.useGem };
 
+    // ======== Multi-drop feature variables ========
+    // indicates whether we are in multi-drop selection mode
+    private bool isMultiDropMode = false;
+    // stores selected items (location (isBody) and indexUI) for multi drop
+    private List<MultiDropItem> multiDropItems = new List<MultiDropItem>();
+    // command constants for confirm/cancel multi drop
+    private const int CMD_MULTI_DROP_CONFIRM = 9901;
+    private const int CMD_MULTI_DROP_CANCEL = 9902;
+
+    // nested class to record location of items to drop
+    private class MultiDropItem
+    {
+        public bool isBody;
+        public int indexUI;
+        public MultiDropItem(bool isBody, int indexUI)
+        {
+            this.isBody = isBody;
+            this.indexUI = indexUI;
+        }
+    }
+
+    // check if a particular item is in multiDropItems
+    private bool MultiDropContains(bool isBody, int indexUI)
+    {
+        foreach (MultiDropItem m in multiDropItems)
+        {
+            if (m.isBody == isBody && m.indexUI == indexUI) return true;
+        }
+        return false;
+    }
+
+    // toggle an item in the multi drop list: add if not exists, remove if exists
+    private void ToggleMultiDropItem(bool isBody, int indexUI)
+    {
+        for (int i = 0; i < multiDropItems.Count; i++)
+        {
+            MultiDropItem m = multiDropItems[i];
+            if (m.isBody == isBody && m.indexUI == indexUI)
+            {
+                multiDropItems.RemoveAt(i);
+                return;
+            }
+        }
+        multiDropItems.Add(new MultiDropItem(isBody, indexUI));
+    }
+
+    // clear the multi drop list
+    private void ClearMultiDrop()
+    {
+        if (multiDropItems != null) multiDropItems.Clear();
+    }
+
+    // -------------------------------------------------------------
+    // Handle selection toggling when in multi-drop mode.
+    // Returns true if a multi-drop selection was toggled and the default
+    // inventory action should be suppressed.  Handles both the legacy
+    // list inventory and the newer grid inventory modes.  This helper
+    // centralises the logic so it can be reused in multiple touch event
+    // branches.
+    private bool HandleMultiDropSelection()
+    {
+        // only toggle when multi-drop mode is active, viewing inventory
+        // and not trading (type 13)
+        if (!isMultiDropMode || !isTabInven() || type == 13)
+        {
+            return false;
+        }
+        try
+        {
+            // When using the new grid inventory (isnewInventory), the selected item
+            // index is stored in sellectInventory.  The body items occupy the
+            // first arrItemBody.Length slots, followed by bag items.  We only
+            // allow toggling items in the bag portion.  Compute the bag index
+            // accordingly.
+            if (isnewInventory)
+            {
+                int bodyCount = Char.myCharz().arrItemBody.Length;
+                // sellectInventory can be -1 if nothing selected
+                if (sellectInventory >= 0)
+                {
+                    int bagIdx = sellectInventory - bodyCount;
+                    // ensure index is within bag bounds
+                    if (bagIdx >= 0 && bagIdx < Char.myCharz().arrItemBag.Length)
+                    {
+                        // bag items are not equipped; always false for isBody parameter
+                        ToggleMultiDropItem(false, bagIdx);
+                        // reset timers so no other action is triggered
+                        pointerDownTime = 0;
+                        waitToPerform = 0;
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                // Legacy list inventory: use helper functions to determine
+                // whether the selection is in the body or bag and compute bag index
+                bool isBody = GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
+                int bagIdx = GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
+                if (!isBody && bagIdx >= 0)
+                {
+                    ToggleMultiDropItem(false, bagIdx);
+                    pointerDownTime = 0;
+                    waitToPerform = 0;
+                    return true;
+                }
+            }
+        }
+        catch (Exception)
+        {
+        }
+        return false;
+    }
+
 	public static int graphics = 0;
 
 	public string[][] shopTabName;
@@ -2610,7 +2724,7 @@ public class Panel : IActionListener, IChatable
 				{
 					mFont3 = mFont.tahoma_7_red;
 				}
-				if (item.itemOption.Length > 1)
+				if (false && item.itemOption.Length > 1)
 				{
 					for (int l = 1; l < Math.min(item.itemOption.Length, 3); l++)
 					{
@@ -2620,7 +2734,7 @@ public class Panel : IActionListener, IChatable
 						}
 					}
 				}
-				mFont3.drawString(g, text2, num + 5, num2 + 10, mFont.LEFT);
+				mFont3.drawString(g, text2, num + 5, num2 + 13, mFont.LEFT);
 			}
 			SmallImage.drawSmallImage(g, item.template.iconID, num5 + num7 / 2, num6 + num8 / 2, 0, 3);
 			if (item.itemOption != null)
@@ -2633,6 +2747,10 @@ public class Panel : IActionListener, IChatable
 				{
 					paintOptSlotItem(g, item.itemOption[n].optionTemplate.id, item.itemOption[n].param, num5, num6, num7, num8);
 				}
+				if (HasStar(item.itemOption))
+				{
+					paintOptSPL(g, item.itemOption, num5, num6, num7, num8);
+				}
 			}
 			if (item.quantity > 1)
 			{
@@ -2641,6 +2759,77 @@ public class Panel : IActionListener, IChatable
 		}
 		paintScrollArrow(g);
 	}
+
+	private bool HasStar(ItemOption[] itemOption)
+	{
+		if (itemOption == null) return false;
+		for (int i = 0; i < itemOption.Length; i++)
+		{
+			ItemOption opt = itemOption[i];
+			if (opt != null && opt.optionTemplate.id == 102 && opt.param > 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void paintOptSPL(mGraphics g, ItemOption[] itemOption, int x, int y, int w, int h)
+	{
+		if (itemOption == null || itemOption.Length <= 1) return;
+
+		mFont mFont3 = mFont.tahoma_7_blue;
+
+		// Giữ nguyên các offset đang dùng để căn vị trí hiển thị
+		int num3 = 145;
+		int num5 = 19;
+		int baseX = x + w - imgo_17.getWidth() + num3 - 5;
+		int baseY = y + h - imgo_17.getHeight() - num5;
+
+		// 1) Gom nhóm theo optionTemplate.id và cộng dồn param
+		Dictionary<int, int> sumById = new Dictionary<int, int>();
+		List<int> idOrder = new List<int>(); // giữ thứ tự xuất hiện ban đầu
+		Dictionary<int, ItemOption> sampleById = new Dictionary<int, ItemOption>();
+
+		for (int i = 1; i < itemOption.Length; i++)
+		{
+			ItemOption opt = itemOption[i];
+			if (opt == null) continue;
+			if (!opt.IsValidOptionSPL()) continue; // bỏ qua option không phải sao pha lê
+
+			int id = opt.optionTemplate.id;
+
+			if (!sumById.ContainsKey(id))
+			{
+				sumById[id] = 0;
+				idOrder.Add(id);
+				sampleById[id] = opt;
+			}
+			sumById[id] += opt.param;
+		}
+
+		// 2) Tạo chuỗi hiển thị bằng cách mượn tạm một item option để gọi getOptionStringSPL()
+		List<string> parts = new List<string>();
+		foreach (int id in idOrder)
+		{
+			ItemOption sample = sampleById[id];
+			int backup = sample.param;
+			sample.param = sumById[id];        // gán tổng param
+			string s = sample.getOptionStringSPL();
+			sample.param = backup;             // khôi phục param gốc
+			if (!string.IsNullOrEmpty(s))
+				parts.Add(s);
+		}
+
+		// 3) Vẽ chuỗi gộp (nếu có)
+		if (parts.Count > 0)
+		{
+			string optText = string.Join(", ", parts);
+			// Vẽ chuỗi ở góc dưới bên phải ô vật phẩm
+			mFont3.drawString(g, optText, baseX + 13, baseY + 12, mFont.RIGHT);
+		}
+	}
+
 
 	private void updateKeyMap()
 	{
@@ -3077,6 +3266,8 @@ public class Panel : IActionListener, IChatable
 					{
 						selected = -1;
 					}
+                    // In multi-drop mode we defer selection handling to doFireInventory().
+                    // Do not toggle selection here; allow the normal flow to continue.
 					checkOptionSelect();
 				}
 				else
@@ -3141,6 +3332,8 @@ public class Panel : IActionListener, IChatable
 			{
 				selected = -1;
 			}
+            // In multi-drop mode, defer selection handling to doFireInventory(); do not
+            // toggle here.  Normal flow continues and doFireInventory() will toggle.
 			checkOptionSelect();
 			pointerDownTime = 0;
 			waitToPerform = 10;
@@ -3186,11 +3379,11 @@ public class Panel : IActionListener, IChatable
 	{
 		// Nếu đang ở tab trang bị Pet (type 21 hoặc 28) và tab 0 hoặc 2,
 		// bỏ qua flag isInventory và gọi trực tiếp hàm cập nhật đầy đủ
-		if ((type == 21 || type == 28) && (currentTabIndex == 0 || currentTabIndex == 2))
-		{
-			updateKeyScrollView222222();
-			return;
-		}
+        if ((type == 21 || type == 28) && (currentTabIndex == 0 || currentTabIndex == 2 || currentTabIndex == 3))
+        {
+            updateKeyScrollView222222();
+            return;
+        }
 
 		if (currentListLength <= 0)
 		{
@@ -3437,6 +3630,8 @@ public class Panel : IActionListener, IChatable
 				int column4 = (GameCanvas.px - xScroll) / (WidthBoxNew + 1);
 				selected = selected + row6 + column4;
 			}
+            // In multi-drop mode, defer selection handling to doFireInventory().
+            // No toggle occurs here; normal flow continues and doFireInventory() will toggle.
 			checkOptionSelect();
 			pointerDownTime = 0;
 			waitToPerform = 10;
@@ -4096,15 +4291,16 @@ public class Panel : IActionListener, IChatable
 
 	private void setTabPetInventory(bool isPet2)
 	{
-		ITEM_HEIGHT = 30;
+        ITEM_HEIGHT = 30;
         // Determine which pet inventory to display and ensure the array is not null
-        Char pet = isPet2 ? Char.MyPet2z() : Char.myPetz();
+		Char pet = isPet2 ? Char.MyPet2z() : Char.myPetz();
         Item[] arrItemBody = (pet != null ? pet.arrItemBody : null);
         if (arrItemBody == null)
         {
             arrItemBody = new Item[0];
         }
-        currentListLength = arrItemBody.Length;
+        // use checkCurrentListLength so that headers and separators are counted properly
+        currentListLength = checkCurrentListLength(arrItemBody.Length);
 		cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
 		cmy = (cmtoY = cmyLast[currentTabIndex]);
 		if (cmyLim < 0)
@@ -4496,16 +4692,17 @@ public class Panel : IActionListener, IChatable
 			}
 			else if (currentTabIndex == 1)
 			{
+                // Pet tab 1 is skill tab for pets; draw skills
 				paintPetSkill(g, type == 28);
 			}
 			else if (currentTabIndex == 2)
 			{
 				paintPetStatus(g);
 			}
-			else if (currentTabIndex == 3)
-			{
-				paintInventory(g);
-			}
+            else if (currentTabIndex == 3)
+            {
+                paintInventory(g);
+            }
 			break;
 		case 24:
 			paintGameSubInfo(g);
@@ -4518,10 +4715,12 @@ public class Panel : IActionListener, IChatable
 			{
 				paintTask(g);
 			}
-			if (currentTabIndex == 1)
-			{
-				paintInventory(g);
-			}
+            if (currentTabIndex == 1)
+            {
+                paintInventory(g);
+                // draw multi-drop button on inventory tab
+                paintMultiDropButton(g);
+            }
 			if (currentTabIndex == 2)
 			{
 				paintSkill(g);
@@ -4566,6 +4765,10 @@ public class Panel : IActionListener, IChatable
 			break;
 		case 7:
 			paintInventory(g);
+            // // show multi-drop toggle/confirm button when the user opens their main inventory panel (type 7)
+            // // this mirrors the behaviour for the inventory tab in the main panel (type 0 currentTabIndex==1)
+            // // Only paint when drawing the player's own inventory; other panel types (e.g. chest or trade) should not show this button
+            // paintMultiDropButton(g);
 			break;
 		case 17:
 			paintShop(g);
@@ -4801,7 +5004,7 @@ public class Panel : IActionListener, IChatable
 						{
 							mFont3 = mFont.tahoma_7_red;
 						}
-						if (item.itemOption.Length > 1)
+						if (false && item.itemOption.Length > 1)
 						{
 							for (int l = 1; l < Math.min(item.itemOption.Length, 3); l++)
 							{
@@ -4817,13 +5020,13 @@ public class Panel : IActionListener, IChatable
 						}
 						if (typeShop != 2 || (typeShop == 2 && item.buyType <= 1))
 						{
-							mFont3.drawString(g, text2, num2 + 5, num3 + 10, 0);
+							mFont3.drawString(g, text2, num2 + 5, num3 + 13, 0);
 						}
 					}
 					if (item.buySpec > 0)
 					{
-						SmallImage.drawSmallImage(g, item.iconSpec, num2 + num4 - 7, num3 + h - 7, 0, 3);
-						mFont.tahoma_7b_dark.drawString(g, Res.formatNumber(item.buySpec), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+						SmallImage.drawSmallImage(g, item.iconSpec, num2 + num4 - 7, num3 + h - 14, 0, 3);
+						mFont.tahoma_7b_green.drawString(g, Res.formatNumber(item.buySpec), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 					}
 					if (item.buyCoin != 0 || item.buyGold != 0)
 					{
@@ -4833,26 +5036,26 @@ public class Panel : IActionListener, IChatable
 							{
 								if (item.buyCoin > 0)
 								{
-									g.drawImage(imgXu, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber(item.buyCoin), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgXu, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber(item.buyCoin), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 								if (item.buyGold > 0)
 								{
-									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_blue.drawString(g, Res.formatNumber(item.buyGold), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_green.drawString(g, Res.formatNumber(item.buyGold), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 							}
 							else
 							{
 								if (item.buyCoin > 0)
 								{
-									g.drawImage(imgXu, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber(item.buyCoin), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgXu, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber(item.buyCoin), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 								if (item.buyGold > 0)
 								{
-									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_blue.drawString(g, Res.formatNumber(item.buyGold), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_green.drawString(g, Res.formatNumber(item.buyGold), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 							}
 						}
@@ -4862,26 +5065,26 @@ public class Panel : IActionListener, IChatable
 							{
 								if (item.buyCoin > 0)
 								{
-									g.drawImage(imgLuongKhoa, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber2(item.buyCoin), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuongKhoa, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber2(item.buyCoin), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 								if (item.buyGold > 0)
 								{
-									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_green.drawString(g, Res.formatNumber2(item.buyGold), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_green.drawString(g, Res.formatNumber2(item.buyGold), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 							}
 							else
 							{
 								if (item.buyCoin > 0)
 								{
-									g.drawImage(imgLuongKhoa, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber2(item.buyCoin), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuongKhoa, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_yellow.drawString(g, Res.formatNumber2(item.buyCoin), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 								if (item.buyGold > 0)
 								{
-									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 5, 3);
-									mFont.tahoma_7b_green.drawString(g, Res.formatNumber2(item.buyGold), num2 + num4 - 17, num3 + h - 9, mFont.RIGHT);
+									g.drawImage(imgLuong, num2 + num4 - 7, num3 + h - 15, 3);
+									mFont.tahoma_7b_green.drawString(g, Res.formatNumber2(item.buyGold), num2 + num4 - 14, num3 + h - 21, mFont.RIGHT);
 								}
 							}
 						}
@@ -5172,7 +5375,7 @@ public class Panel : IActionListener, IChatable
 				{
 					mFont3 = mFont.tahoma_7_red;
 				}
-				if (item.itemOption.Length > 1)
+				if (false && item.itemOption.Length > 1)
 				{
 					for (int l = 1; l < Math.min(item.itemOption.Length, 3); l++)
 					{
@@ -5182,7 +5385,7 @@ public class Panel : IActionListener, IChatable
 						}
 					}
 				}
-				mFont3.drawString(g, text2, num3 + 5, num4 + 10, mFont.LEFT);
+				mFont3.drawString(g, text2, num3 + 5, num4 + 13, mFont.LEFT);
 			}
 			SmallImage.drawSmallImage(g, item.template.iconID, num6 + num8 / 2, num7 + num9 / 2, 0, 3);
 			if (item.itemOption != null)
@@ -5194,6 +5397,10 @@ public class Panel : IActionListener, IChatable
 				for (int n = 0; n < item.itemOption.Length; n++)
 				{
 					paintOptSlotItem(g, item.itemOption[n].optionTemplate.id, item.itemOption[n].param, num6, num7, num8, num9);
+				}
+				if (HasStar(item.itemOption))
+				{
+					paintOptSPL(g, item.itemOption, num6, num7, num8, num9);
 				}
 			}
 			if (item.quantity > 1)
@@ -5684,7 +5891,7 @@ public class Panel : IActionListener, IChatable
 					{
 						mFont3 = mFont.tahoma_7_red;
 					}
-					if (item.itemOption.Length > 1)
+					if (false && item.itemOption.Length > 1)
 					{
 						for (int m = 1; m < Math.min(item.itemOption.Length, 3); m++)
 						{
@@ -5694,7 +5901,7 @@ public class Panel : IActionListener, IChatable
 							}
 						}
 					}
-					mFont3.drawString(g, text2, num2 + 5, num3 + 10, mFont.LEFT);
+					mFont3.drawString(g, text2, num2 + 5, num3 + 13, mFont.LEFT);
 				}
 				SmallImage.drawSmallImage(g, item.template.iconID, num5 + num7 / 2, num6 + num8 / 2, 0, 3);
 				if (item.itemOption != null)
@@ -5706,6 +5913,10 @@ public class Panel : IActionListener, IChatable
 					for (int num10 = 0; num10 < item.itemOption.Length; num10++)
 					{
 						paintOptSlotItem(g, item.itemOption[num10].optionTemplate.id, item.itemOption[num10].param, num5, num6, num7, num8);
+					}
+					if (HasStar(item.itemOption))
+					{
+						paintOptSPL(g, item.itemOption, num5, num6, num7, num8);
 					}
 				}
 				if (item.quantity > 1)
@@ -6445,7 +6656,7 @@ public class Panel : IActionListener, IChatable
 				{
 					mFont3 = mFont.tahoma_7_red;
 				}
-				if (item.itemOption.Length > 1)
+				if (false && item.itemOption.Length > 1)
 				{
 					for (int m = 1; m < item.itemOption.Length; m++)
 					{
@@ -6455,7 +6666,7 @@ public class Panel : IActionListener, IChatable
 						}
 					}
 				}
-				mFont3.drawString(g, text2, num + 5, num2 + 10, mFont.LEFT);
+				mFont3.drawString(g, text2, num + 5, num2 + 13, mFont.LEFT);
 			}
 			SmallImage.drawSmallImage(g, item.template.iconID, num5 + num7 / 2, num6 + num8 / 2, 0, 3);
 			if (item.itemOption != null)
@@ -6467,6 +6678,10 @@ public class Panel : IActionListener, IChatable
 				for (int num9 = 0; num9 < item.itemOption.Length; num9++)
 				{
 					paintOptSlotItem(g, item.itemOption[num9].optionTemplate.id, item.itemOption[num9].param, num5, num6, num7, num8);
+				}
+				if (HasStar(item.itemOption))
+				{
+					paintOptSPL(g, item.itemOption, num5, num6, num7, num8);
 				}
 			}
 			if (item.quantity > 1)
@@ -6520,6 +6735,15 @@ public class Panel : IActionListener, IChatable
 				bool inventorySelect_isbody = GetInventorySelect_isbody(j, newSelected, Char.myCharz().arrItemBody);
 				int inventorySelect_body = GetInventorySelect_body(j, newSelected);
 				int inventorySelect_bag = GetInventorySelect_bag(j, newSelected, Char.myCharz().arrItemBody);
+                // Highlight items selected for multi-drop when inventory is in list mode (only for player inventory)
+                if (isMultiDropMode && isTabInven() && type != 13 && !inventorySelect_isbody && inventorySelect_bag >= 0 && MultiDropContains(false, inventorySelect_bag))
+                {
+                    // draw bright green border and soft green fill across the entire row for better highlighting
+                    g.setColor(0x00FF00);
+                    g.fillRect(num23 - 1, num24 - 1, wScroll + 1, h2 + 2, 5);
+                    g.setColor(0xCCFFCC);
+                    g.fillRect(num23, num24, wScroll, h2, 5);
+                }
 				g.setColor((j == selected) ? 16383818 : ((!inventorySelect_isbody) ? 15723751 : 15196114));
 				g.fillRect(num23, num24, num25, h2, 5);
 				g.setColor((j == selected) ? 9541120 : ((!inventorySelect_isbody) ? 11837316 : 9993045));
@@ -6672,7 +6896,17 @@ public class Panel : IActionListener, IChatable
 				int num7 = xScroll;
 				int num8 = y;
 				int num9 = ITEM_HEIGHT - 1;
-				int num10 = ITEM_HEIGHT - 1;
+                int num10 = ITEM_HEIGHT - 1;
+
+                // draw highlight for items selected in multi-drop mode for body inventory (rare)
+                if (isMultiDropMode && isTabInven() && type != 13 && MultiDropContains(true, j))
+                {
+                    // draw border with bright green color and soft green fill to highlight selected body items
+                    g.setColor(0x00FF00);
+                    g.fillRect(x - 1, y - 1, wScroll + 1, ITEM_HEIGHT, 5);
+                    g.setColor(0xCCFFCC);
+                    g.fillRect(x, y, wScroll, ITEM_HEIGHT - 1, 5);
+                }
 				if (y - cmy > yScroll + hScroll || y - cmy < yScroll - ITEM_HEIGHT)
 				{
 					continue;
@@ -6745,12 +6979,16 @@ public class Panel : IActionListener, IChatable
 					{
 						text2 += item.itemOption[0].getOptionString();
 					}
+					else if (!item.itemOption[0].IsValidOption())
+					{
+						text2 += item.itemOption[1].getOptionString();
+					}
 					mFont mFont3 = mFont.tahoma_7_blue;
 					if (item.compare < 0 && item.template.type != 5)
 					{
 						mFont3 = mFont.tahoma_7_red;
 					}
-					if (item.itemOption.Length > 1)
+					if (false && item.itemOption.Length > 1)
 					{
 						for (int i = 1; i < Math.min(item.itemOption.Length, 3); i++)
 						{
@@ -6760,7 +6998,7 @@ public class Panel : IActionListener, IChatable
 							}
 						}
 					}
-					mFont3.drawString(g, text2, x + 5, y + 10, mFont.LEFT);
+					mFont3.drawString(g, text2, x + 5, y + 13, mFont.LEFT);
 				}
 				SmallImage.drawSmallImage(g, item.template.iconID, num7 + num9 / 2, num8 + num10 / 2, 0, 3);
 				if (item.itemOption != null)
@@ -6773,6 +7011,10 @@ public class Panel : IActionListener, IChatable
 					{
 						paintOptSlotItem(g, item.itemOption[m].optionTemplate.id, item.itemOption[m].param, num7, num8, num9, num10);
 					}
+					if (HasStar(item.itemOption))
+					{
+						paintOptSPL(g, item.itemOption, num7, num8, num9, num10);
+					}
 				}
 			}
 			for (int num11 = 0; num11 < arrItemBag.Length; num11++)
@@ -6783,10 +7025,20 @@ public class Panel : IActionListener, IChatable
 				int num13 = x2;
 				int num14 = y2;
 				int num15 = ITEM_HEIGHT - 1;
-				if (y2 - cmy > yScroll + hScroll || y2 - cmy < yScroll - ITEM_HEIGHT)
-				{
-					continue;
-				}
+                if (y2 - cmy > yScroll + hScroll || y2 - cmy < yScroll - ITEM_HEIGHT)
+                {
+                    continue;
+                }
+
+                // draw highlight for items selected in multi-drop mode for bag inventory (only player inventory)
+                if (isMultiDropMode && isTabInven() && type != 13 && MultiDropContains(false, num11))
+                {
+                    // draw a bright green border and soft green background around the slot for better visibility
+                    g.setColor(0x00FF00);
+                    g.fillRect(x2 - 1, y2 - 1, num12 + 1, ITEM_HEIGHT, 5);
+                    g.setColor(0xCCFFCC);
+                    g.fillRect(x2, y2, num12, num15, 5);
+                }
 				int inventorySelect_bag = GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
 				if (num11 == inventorySelect_bag)
 				{
@@ -7135,12 +7387,12 @@ public class Panel : IActionListener, IChatable
 		
 		mFont.tahoma_7b_white.drawString(g, mResources.dragon_ball + " v" + GameMidlet.VERSION1, 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
 		string plName = Char.myCharz().cName;
-        mFont.tahoma_7b_white.drawString(g, plName, 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, plName, 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
 		if (Char.myCharz().isTichXanh)
 		{
-            int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
+			int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
 			int tickX = X + 58 + nameWidth + 5;
-            ModFunc.PaintTicks(g, tickX, 17);
+			ModFunc.PaintTicks(g, tickX, 17);
 		}
 		string text = ((!GameCanvas.loginScr.tfUser.getText().Equals(string.Empty)) ? GameCanvas.loginScr.tfUser.getText() : mResources.not_register_yet);
 		mFont.tahoma_7_yellow.drawString(g, mResources.account_server + " " + ServerListScreen.nameServer[ServerListScreen.ipSelect], 60, 35, mFont.LEFT, mFont.tahoma_7_grey);
@@ -7195,15 +7447,15 @@ public class Panel : IActionListener, IChatable
 	{
 		string plName = c.cName;
 		// mFont.tahoma_7b_white.drawString(g, (c.isTichXanh ? "     " : string.Empty) + c.cName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-        mFont.tahoma_7b_white.drawString(g, plName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, plName, X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
 
 		if (c.isTichXanh)
 		{
 			// ModFunc.PaintTicks(g, X + 60, 5);
-            int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
-            // Add a small gap (5 pixels) after the name before drawing the tick
-            int tickX = X + 60 + nameWidth + 5;
-            ModFunc.PaintTicks(g, tickX, 5);
+			int nameWidth = mFont.tahoma_7b_white.getWidth(plName);
+			// Add a small gap (5 pixels) after the name before drawing the tick
+			int tickX = X + 60 + nameWidth + 5;
+			ModFunc.PaintTicks(g, tickX, 5);
 		}
 		if (c.cMaxStamina > 0)
 		{
@@ -7375,9 +7627,9 @@ public class Panel : IActionListener, IChatable
 		double cMP = Char.myCharz().cMP;
 		double cMPFull = Char.myCharz().cMPFull;
 		// HP
-		string hpStr = mResources.HP + ": " + Res.formatNumber((long)cHp) + " / " + Res.formatNumber((long)cHPFull);
+		string hpStr = mResources.HP + ": " + Res.formatNumber3((long)cHp) + " / " + Res.formatNumber3((long)cHPFull);
 		// KI
-		string kiStr = mResources.KI + ": " + Res.formatNumber((long)cMP) + " / " + Res.formatNumber((long)cMPFull);
+		string kiStr = mResources.KI + ": " + Res.formatNumber3((long)cMP) + " / " + Res.formatNumber3((long)cMPFull);
 		// Sức đánh
 		string dmgStr = mResources.hit_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cDamFull);
 		// Giáp
@@ -8180,7 +8432,51 @@ public class Panel : IActionListener, IChatable
 			tabIcon.update();
 			return;
 		}
-		moveCamera();
+        moveCamera();
+        // Handle pointer click on multi-drop toggle/confirm button
+        // Only applicable when viewing inventory or pet inventory tabs
+        if (GameCanvas.isPointerJustRelease)
+		{
+			int btnW = 40;
+			int btnH = 16;
+			int btnX = GameCanvas.w - btnW - 6;
+			int btnY = 6;
+
+			if ((isTabInven() && type != 13) && GameCanvas.isPointer(btnX, btnY, btnW, btnH))
+			{
+				GameCanvas.isPointerJustRelease = false;
+
+				if (isMultiDropMode)
+				{
+					// Trước khi mở dialog: lọc lại danh sách hợp lệ
+					string confirmMsg;
+					var valid = BuildValidMultiDropListAndMessage(out confirmMsg);
+
+					if (valid.Count == 0)
+					{
+						// Không còn item hợp lệ -> thoát chế độ, không mở dialog thừa
+						ClearMultiDrop();
+						isMultiDropMode = false;
+					}
+					else
+					{
+						// Ghi đè selection bằng danh sách đã lọc
+						multiDropItems = valid;
+
+						var yesCmd = new Command(mResources.YES, this, CMD_MULTI_DROP_CONFIRM, null);
+						var noCmd  = new Command(mResources.NO,  this, CMD_MULTI_DROP_CANCEL,  null);
+						GameCanvas.startYesNoDlg(confirmMsg, yesCmd, noCmd);
+					}
+				}
+				else
+				{
+					// Bật chế độ multi-drop và làm sạch chọn cũ
+					isMultiDropMode = true;
+					ClearMultiDrop();
+				}
+				return;
+			}
+		}
 		if (isTabInven() && isnewInventory)
 		{
 			if (eBanner == null)
@@ -8733,6 +9029,52 @@ public class Panel : IActionListener, IChatable
 
 	private void doFireInventory()
 	{
+        // If we are in multi-drop mode, toggle selection of the clicked item instead
+        // of opening the context menu or performing default actions.  This handles
+        // both list and grid inventory layouts.  After toggling, return to avoid
+        // executing any further logic.
+        if (isMultiDropMode)
+        {
+            try
+            {
+                // In grid inventory, use sellectInventory to determine bag index.
+                if (isnewInventory)
+                {
+                    // In new grid inventory, compute bag index and ensure it contains a valid item before toggling
+                    int bodyCount = Char.myCharz().arrItemBody.Length;
+                    if (sellectInventory >= 0)
+                    {
+                        int bagIdx = sellectInventory - bodyCount;
+                        if (bagIdx >= 0 && bagIdx < Char.myCharz().arrItemBag.Length)
+                        {
+                            Item itm = Char.myCharz().arrItemBag[bagIdx];
+                            if (itm != null && itm.template != null)
+                            {
+                            ToggleMultiDropItem(false, bagIdx);
+                        }
+                    }
+                }
+                }
+                else
+                {
+                    // In list inventory, determine if selection is a bag item and toggle only if it exists
+                    bool isBody = GetInventorySelect_isbody(selected, newSelected, Char.myCharz().arrItemBody);
+                    int bagIdx = GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
+                    if (!isBody && bagIdx >= 0)
+                    {
+                        Item itm = Char.myCharz().arrItemBag[bagIdx];
+                        if (itm != null && itm.template != null)
+                        {
+                        ToggleMultiDropItem(false, bagIdx);
+                    }
+                }
+            }
+            }
+            catch (Exception)
+            {
+            }
+            return;
+        }
 		if (Char.myCharz().statusMe == 14)
 		{
 			GameCanvas.startOKDlg(mResources.can_not_do_when_die);
@@ -8914,49 +9256,49 @@ public class Panel : IActionListener, IChatable
 		{
 			switch (selected)
 			{
-			case 0:
-				setTypeGameInfo();
-				break;
-			case 1:
-				SetTypeModFunc();
-				break;
-			case 2:
-				SetTypePlayerInfo();
-				break;
-			case 3:
-				doRada();
-				break;
-			case 4:
-				Service.gI().getFlag(0, -1);
-				InfoDlg.showWait();
-				break;
-			case 5:
-				if (Char.myCharz().statusMe == 14)
-				{
-					GameCanvas.startOKDlg(mResources.can_not_do_when_die);
+				case 0:
+					setTypeGameInfo();
 					break;
-				}
-				ModFunc.GI().userOpenZones = true;
-				Service.gI().openUIZone();
-				break;
-			case 6:
-				ModFunc.DoChatGlobal();
-				break;
-			case 7:
-				setTypeAccount();
-				break;
-			case 8:
-				setTypeOption();
-				break;
-			case 9:
-				GameCanvas.loginScr.backToRegister();
-				break;
-			case 10:
-				if (GameCanvas.loginScr.isLogin2)
-				{
-					SoundMn.gI().backToRegister();
-				}
-				break;
+				case 1:
+					SetTypeModFunc();
+					break;
+				case 2:
+					SetTypePlayerInfo();
+					break;
+				case 3:
+					doRada();
+					break;
+				case 4:
+					Service.gI().getFlag(0, -1);
+					InfoDlg.showWait();
+					break;
+				case 5:
+					if (Char.myCharz().statusMe == 14)
+					{
+						GameCanvas.startOKDlg(mResources.can_not_do_when_die);
+						break;
+					}
+					ModFunc.GI().userOpenZones = true;
+					Service.gI().openUIZone();
+					break;
+				case 6:
+					ModFunc.DoChatGlobal();
+					break;
+				case 7:
+					setTypeAccount();
+					break;
+				case 8:
+					setTypeOption();
+					break;
+				case 9:
+					GameCanvas.loginScr.backToRegister();
+					break;
+				case 10:
+					if (GameCanvas.loginScr.isLogin2)
+					{
+						SoundMn.gI().backToRegister();
+					}
+					break;
 			}
 			return;
 		}
@@ -8964,6 +9306,60 @@ public class Panel : IActionListener, IChatable
 		{
 			switch (selected)
 			{
+				case 0:
+					setTypeGameInfo();
+					break;
+				case 1:
+					SetTypeModFunc();
+					break;
+				case 2:
+					SetTypePlayerInfo();
+					break;
+				case 3:
+					doRada();
+					break;
+				case 4:
+					doFirePet();
+					break;
+				case 5:
+					doFirePet2();
+					break;
+				case 6:
+					Service.gI().getFlag(0, -1);
+					InfoDlg.showWait();
+					break;
+				case 7:
+					if (Char.myCharz().statusMe == 14)
+					{
+						GameCanvas.startOKDlg(mResources.can_not_do_when_die);
+						break;
+					}
+					ModFunc.GI().userOpenZones = true;
+					Service.gI().openUIZone();
+					break;
+				case 8:
+					ModFunc.DoChatGlobal();
+					break;
+				case 9:
+					setTypeAccount();
+					break;
+				case 10:
+					setTypeOption();
+					break;
+				case 11:
+					GameCanvas.loginScr.backToRegister();
+					break;
+				case 12:
+					if (GameCanvas.loginScr.isLogin2)
+					{
+						SoundMn.gI().backToRegister();
+					}
+					break;
+			}
+			return;
+		}
+		switch (selected)
+		{
 			case 0:
 				setTypeGameInfo();
 				break;
@@ -8977,16 +9373,20 @@ public class Panel : IActionListener, IChatable
 				doRada();
 				break;
 			case 4:
-				doFirePet();
+				if (Char.myCharz().havePet)
+				{
+					doFirePet();
+				}
+				else
+				{
+					doFirePet2();
+				}
 				break;
 			case 5:
-				doFirePet2();
-				break;
-			case 6:
 				Service.gI().getFlag(0, -1);
 				InfoDlg.showWait();
 				break;
-			case 7:
+			case 6:
 				if (Char.myCharz().statusMe == 14)
 				{
 					GameCanvas.startOKDlg(mResources.can_not_do_when_die);
@@ -8995,82 +9395,24 @@ public class Panel : IActionListener, IChatable
 				ModFunc.GI().userOpenZones = true;
 				Service.gI().openUIZone();
 				break;
-			case 8:
+			case 7:
 				ModFunc.DoChatGlobal();
 				break;
-			case 9:
+			case 8:
 				setTypeAccount();
 				break;
-			case 10:
+			case 9:
 				setTypeOption();
 				break;
-			case 11:
+			case 10:
 				GameCanvas.loginScr.backToRegister();
 				break;
-			case 12:
+			case 11:
 				if (GameCanvas.loginScr.isLogin2)
 				{
 					SoundMn.gI().backToRegister();
 				}
 				break;
-			}
-			return;
-		}
-		switch (selected)
-		{
-		case 0:
-			setTypeGameInfo();
-			break;
-		case 1:
-			SetTypeModFunc();
-			break;
-		case 2:
-			SetTypePlayerInfo();
-			break;
-		case 3:
-			doRada();
-			break;
-		case 4:
-			if (Char.myCharz().havePet)
-			{
-				doFirePet();
-			}
-			else
-			{
-				doFirePet2();
-			}
-			break;
-		case 5:
-			Service.gI().getFlag(0, -1);
-			InfoDlg.showWait();
-			break;
-		case 6:
-			if (Char.myCharz().statusMe == 14)
-			{
-				GameCanvas.startOKDlg(mResources.can_not_do_when_die);
-				break;
-			}
-			ModFunc.GI().userOpenZones = true;
-			Service.gI().openUIZone();
-			break;
-		case 7:
-			ModFunc.DoChatGlobal();
-			break;
-		case 8:
-			setTypeAccount();
-			break;
-		case 9:
-			setTypeOption();
-			break;
-		case 10:
-			GameCanvas.loginScr.backToRegister();
-			break;
-		case 11:
-			if (GameCanvas.loginScr.isLogin2)
-			{
-				SoundMn.gI().backToRegister();
-			}
-			break;
 		}
 	}
 
@@ -10051,35 +10393,136 @@ public class Panel : IActionListener, IChatable
 		itemObject.id = id;
 		GameCanvas.startYesNoDlg(info, new Command(mResources.YES, this, 3003, itemObject), new Command(mResources.NO, this, 4005, null));
 	}
+	
+	// Giữ nguyên kiểu MultiDropItem hiện có
+	// public struct MultiDropItem { public bool isBody; public int indexUI; }
+
+	private List<MultiDropItem> BuildValidMultiDropListAndMessage(out string message)
+	{
+		var valid = new List<MultiDropItem>();
+		var sb = new System.Text.StringBuilder("Bạn chắc chắn muốn vứt những vật phẩm sau?\nSau khi vứt không thể thu hồi\n");
+		var seen = new System.Collections.Generic.HashSet<string>(); // chống trùng một slot
+
+		foreach (var m in multiDropItems)
+		{
+			Item[] arr = m.isBody ? Char.myCharz().arrItemBody : Char.myCharz().arrItemBag;
+			if (m.indexUI < 0 || m.indexUI >= arr.Length) continue;
+
+			Item it = arr[m.indexUI];
+			if (it == null || it.template == null) continue;
+
+			string key = (m.isBody ? "B" : "K") + ":" + m.indexUI;
+			if (!seen.Add(key)) continue;
+
+			valid.Add(m);
+			sb.Append("- ").Append(it.template.name).Append('\n');
+		}
+
+		message = sb.ToString();
+		return valid;
+	}
 
 	public void perform(int idAction, object p)
 	{
+		// handle confirm/cancel actions for multi-drop mode
+		if (idAction == CMD_MULTI_DROP_CONFIRM)
+		{
+			// Đóng dialog trước khi gửi lệnh
+			GameCanvas.endDlg();
+
+			// Re-validate một lần nữa phòng race-condition
+			string _;
+			var itemsToDrop = BuildValidMultiDropListAndMessage(out _);
+			if (itemsToDrop.Count == 0)
+			{
+				ClearMultiDrop();
+				isMultiDropMode = false;
+				// Dọn selection để tránh highlight "ma"
+				this.selected = -1;
+				return;
+			}
+
+			// Sắp xếp an toàn: bag trước (isBody=false), rồi index giảm dần; sau đó mới body
+			itemsToDrop.Sort((a, b) =>
+			{
+				if (a.isBody != b.isBody) return a.isBody ? 1 : -1; // bag trước
+				return b.indexUI.CompareTo(a.indexUI);               // giảm dần
+			});
+
+			// Gửi lệnh vứt
+			foreach (MultiDropItem m in itemsToDrop)
+			{
+				sbyte where = (sbyte)(m.isBody ? 0 : 1);
+				sbyte index = (sbyte)m.indexUI;
+				Item[] arr = m.isBody ? Char.myCharz().arrItemBody : Char.myCharz().arrItemBag;
+				if (index < 0 || index >= arr.Length) continue;
+				Item item = arr[index];
+				if (item == null || item.template == null) continue;
+
+				// ❌ BỎ lệnh yêu cầu (1) vì nó tạo dialog xác nhận đơn lẻ
+				// Service.gI().useItem(1, where, index, -1);
+
+				// ✅ Chỉ gửi lệnh chấp nhận vứt
+				Service.gI().useItem(2, where, index, -1);
+			}
+
+			// Dọn dẹp chế độ
+			ClearMultiDrop();
+			isMultiDropMode = false;
+			selected = -1;               // bỏ chọn
+			GameCanvas.clearAllPointerEvent();
+			pointerDownTime = 0;
+			waitToPerform = 0;
+			GameCanvas.endDlg();
+			return;
+		}
+
+		if (idAction == CMD_MULTI_DROP_CANCEL)
+		{
+			ClearMultiDrop();
+			isMultiDropMode = false;
+
+			// Dọn selection để chắc chắn không còn highlight cũ
+			this.selected = -1;
+
+			GameCanvas.endDlg();
+			return;
+		}
+
+		// When in multi-drop mode, suppress individual inventory actions such as
+		// equip/use/remove/etc.  These actions correspond to idAction values in the
+		// 2000–2008 range.  We allow other unrelated actions to proceed, and
+		// naturally still handle the multi-drop confirm/cancel commands above.
+		if (isMultiDropMode && idAction >= 2000 && idAction <= 2008)
+		{
+			return;
+		}
 		switch (idAction)
 		{
-		case 8010:
-			if (chatTField == null)
-			{
-				chatTField = new ChatTextField();
-				chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
-				chatTField.initChatTextField();
-				chatTField.parentScreen = this;
-			}
-			ModFunc.GI().MyChatTextField(chatTField, "Nhập số sao cần đập", "Chỉ được nhập số");
-			break;
-		case 8011:
-		{
-			if (chatTField == null)
-			{
-				chatTField = new ChatTextField();
-				chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
-				chatTField.initChatTextField();
-				chatTField.parentScreen = this;
-			}
-			string infoIntrinsic = (string)p;
-			ModFunc.GI().curSelectIntrinsic = infoIntrinsic;
-			ModFunc.GI().MyChatTextField(chatTField, "Nhập chỉ số mong muốn", "Chỉ nhập số");
-			break;
-		}
+			case 8010:
+				if (chatTField == null)
+				{
+					chatTField = new ChatTextField();
+					chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
+					chatTField.initChatTextField();
+					chatTField.parentScreen = this;
+				}
+				ModFunc.GI().MyChatTextField(chatTField, "Nhập số sao cần đập", "Chỉ được nhập số");
+				break;
+			case 8011:
+				{
+					if (chatTField == null)
+					{
+						chatTField = new ChatTextField();
+						chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
+						chatTField.initChatTextField();
+						chatTField.parentScreen = this;
+					}
+					string infoIntrinsic = (string)p;
+					ModFunc.GI().curSelectIntrinsic = infoIntrinsic;
+					ModFunc.GI().MyChatTextField(chatTField, "Nhập chỉ số mong muốn", "Chỉ nhập số");
+					break;
+				}
 		}
 		if (idAction == 9999)
 		{
@@ -11469,24 +11912,24 @@ public class Panel : IActionListener, IChatable
 		{
 			switch (selected)
 			{
-			case 0:
-				SoundMn.gI().AuraToolOption();
-				break;
-			case 1:
-				SoundMn.gI().AuraToolOption2();
-				break;
-			case 2:
-				SoundMn.gI().soundToolOption();
-				break;
-			case 3:
-				SoundMn.gI().CaseSizeScr();
-				break;
-			case 4:
-				SoundMn.gI().CaseAnalog();
-				break;
-			case 5:
-				SoundMn.gI().CaseAnalog();
-				break;
+				case 0:
+					SoundMn.gI().AuraToolOption();
+					break;
+				case 1:
+					SoundMn.gI().AuraToolOption2();
+					break;
+				case 2:
+					SoundMn.gI().soundToolOption();
+					break;
+				case 3:
+					SoundMn.gI().CaseSizeScr();
+					break;
+				case 4:
+					SoundMn.gI().CaseAnalog();
+					break;
+				case 5:
+					SoundMn.gI().CaseAnalog();
+					break;
 			}
 		}
 	}
@@ -11501,155 +11944,155 @@ public class Panel : IActionListener, IChatable
 		int selectedInTab = selected;
 		switch (currentTab)
 		{
-		case 0:
-			switch (selectedInTab)
-			{
 			case 0:
-				ModFunc.GI().isHighFps = !ModFunc.GI().isHighFps;
-				ModFunc.GI().ChangeFPSTarget();
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().isHighFps ? "bật" : "tắt") + " FPS cao", 0);
-				break;
-			case 1:
-				ModFunc.GI().isUpdateZones = !ModFunc.GI().isUpdateZones;
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().isUpdateZones ? "bật" : "tắt") + " cập nhật khu vực", 0);
-				break;
-			case 2:
-				ModFunc.GI().showCharsInMap = !ModFunc.GI().showCharsInMap;
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().showCharsInMap ? "bật" : "tắt") + " hiển thị người chơi trong bản đồ", 0);
-				break;
-			case 3:
-				ModFunc.GI().showInfoMe = !ModFunc.GI().showInfoMe;
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().showInfoMe ? "bật" : "tắt") + " hiển thị thông tin bản thân", 0);
-				break;
-			case 4:
-				if (Main.isIPhone)
+				switch (selectedInTab)
 				{
-					ModFunc.GI().isShowButton = !ModFunc.GI().isShowButton;
-					GameScr.info1.addInfo("Đã " + (ModFunc.GI().isShowButton ? "bật" : "tắt") + " hiển thị nút", 0);
-				}
-				else
-				{
-					GameScr.info1.addInfo("Hiển thị nút không hỗ trợ trên PC", 0);
-				}
-				break;
-			}
-			break;
-		case 1:
-			switch (selectedInTab)
-			{
-			case 0:
-				ModFunc.GI().isAutoPhaLe = !ModFunc.GI().isAutoPhaLe;
-				if (ModFunc.GI().isAutoPhaLe)
-				{
-					new Thread(ModFunc.GI().AutoPhaLe).Start();
-				}
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoPhaLe ? "bật" : "tắt") + " tự động pha lê", 0);
-				break;
-			case 1:
-				if (!ModFunc.GI().isAutoVQMM)
-				{
-					hideNow();
-				}
-				ModFunc.GI().isAutoVQMM = !ModFunc.GI().isAutoVQMM;
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoVQMM ? "bật" : "tắt") + " tự động vòng quay may mắn", 0);
-				break;
-			case 2:
-				ModFunc.GI().autoWakeUp = !ModFunc.GI().autoWakeUp;
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().autoWakeUp ? "bật" : "tắt") + " Auto Hồi Sinh", 0);
-				break;
-			case 3:
-				if (ModFunc.isAutoLogin)
-				{
-					ModFunc.isAutoLogin = false;
-					ModFunc.autoLogin = null;
-				}
-				else
-				{
-					ModFunc.isAutoLogin = true;
-					ModFunc.autoLogin = new AutoLogin
-					{
-						accAutoLogin = GameCanvas.loginScr.tfUser.getText()
-					};
-				}
-				GameScr.info1.addInfo("Đã " + (ModFunc.isAutoLogin ? "bật" : "tắt") + " tự động đăng nhập", 0);
-				break;
-			}
-			break;
-		case 2:
-			switch (selectedInTab)
-			{
-			case 0:
-				if (!ModFunc.ModNotLogo)
-				{
-					ModFunc.changeStatusLogo();
-					GameScr.info1.addInfo("Đã " + (ModFunc.isLogo ? "bật" : "tắt") + " hiển thị logo", 0);
+					case 0:
+						ModFunc.GI().isHighFps = !ModFunc.GI().isHighFps;
+						ModFunc.GI().ChangeFPSTarget();
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isHighFps ? "bật" : "tắt") + " FPS cao", 0);
+						break;
+					case 1:
+						ModFunc.GI().isUpdateZones = !ModFunc.GI().isUpdateZones;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isUpdateZones ? "bật" : "tắt") + " cập nhật khu vực", 0);
+						break;
+					case 2:
+						ModFunc.GI().showCharsInMap = !ModFunc.GI().showCharsInMap;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().showCharsInMap ? "bật" : "tắt") + " hiển thị người chơi trong bản đồ", 0);
+						break;
+					case 3:
+						ModFunc.GI().showInfoMe = !ModFunc.GI().showInfoMe;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().showInfoMe ? "bật" : "tắt") + " hiển thị thông tin bản thân", 0);
+						break;
+					case 4:
+						if (Main.isIPhone)
+						{
+							ModFunc.GI().isShowButton = !ModFunc.GI().isShowButton;
+							GameScr.info1.addInfo("Đã " + (ModFunc.GI().isShowButton ? "bật" : "tắt") + " hiển thị nút", 0);
+						}
+						else
+						{
+							GameScr.info1.addInfo("Hiển thị nút không hỗ trợ trên PC", 0);
+						}
+						break;
 				}
 				break;
 			case 1:
-				if (!ModFunc.ModNotLogo && ModFunc.isLogo)
+				switch (selectedInTab)
 				{
-					if (!ModFunc.ModNotLogoGif)
-					{
-						ModFunc.changeStatusLogoGif();
-						GameScr.info1.addInfo("Đã " + (ModFunc.isLogoGif ? "bật" : "tắt") + " logo động", 0);
-					}
-					else
-					{
-						GameScr.info1.addInfo("Server Không có Logo GIF Bạn ơi", 0);
-					}
-				}
-				else
-				{
-					GameScr.info1.addInfo("Vui lòng bật logo trước khi bật logo động", 0);
+					case 0:
+						ModFunc.GI().isAutoPhaLe = !ModFunc.GI().isAutoPhaLe;
+						if (ModFunc.GI().isAutoPhaLe)
+						{
+							new Thread(ModFunc.GI().AutoPhaLe).Start();
+						}
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoPhaLe ? "bật" : "tắt") + " tự động pha lê", 0);
+						break;
+					case 1:
+						if (!ModFunc.GI().isAutoVQMM)
+						{
+							hideNow();
+						}
+						ModFunc.GI().isAutoVQMM = !ModFunc.GI().isAutoVQMM;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoVQMM ? "bật" : "tắt") + " tự động vòng quay may mắn", 0);
+						break;
+					case 2:
+						ModFunc.GI().autoWakeUp = !ModFunc.GI().autoWakeUp;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().autoWakeUp ? "bật" : "tắt") + " Auto Hồi Sinh", 0);
+						break;
+					case 3:
+						if (ModFunc.isAutoLogin)
+						{
+							ModFunc.isAutoLogin = false;
+							ModFunc.autoLogin = null;
+						}
+						else
+						{
+							ModFunc.isAutoLogin = true;
+							ModFunc.autoLogin = new AutoLogin
+							{
+								accAutoLogin = GameCanvas.loginScr.tfUser.getText()
+							};
+						}
+						GameScr.info1.addInfo("Đã " + (ModFunc.isAutoLogin ? "bật" : "tắt") + " tự động đăng nhập", 0);
+						break;
 				}
 				break;
 			case 2:
-				ModFunc.changeStatusAnPlayer();
-				GameScr.info1.addInfo("Đã " + (ModFunc.AnPlayer ? "bật" : "tắt") + " ẩn người chơi", 0);
+				switch (selectedInTab)
+				{
+					case 0:
+						if (!ModFunc.ModNotLogo)
+						{
+							ModFunc.changeStatusLogo();
+							GameScr.info1.addInfo("Đã " + (ModFunc.isLogo ? "bật" : "tắt") + " hiển thị logo", 0);
+						}
+						break;
+					case 1:
+						if (!ModFunc.ModNotLogo && ModFunc.isLogo)
+						{
+							if (!ModFunc.ModNotLogoGif)
+							{
+								ModFunc.changeStatusLogoGif();
+								GameScr.info1.addInfo("Đã " + (ModFunc.isLogoGif ? "bật" : "tắt") + " logo động", 0);
+							}
+							else
+							{
+								GameScr.info1.addInfo("Server Không có Logo GIF Bạn ơi", 0);
+							}
+						}
+						else
+						{
+							GameScr.info1.addInfo("Vui lòng bật logo trước khi bật logo động", 0);
+						}
+						break;
+					case 2:
+						ModFunc.changeStatusAnPlayer();
+						GameScr.info1.addInfo("Đã " + (ModFunc.AnPlayer ? "bật" : "tắt") + " ẩn người chơi", 0);
+						break;
+					case 3:
+						ModFunc.changeStatusShowID();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isShowID ? "bật" : "tắt") + " hiển thị ID", 0);
+						break;
+					case 4:
+						// ModFunc.chanegStatusInventory();
+						// GameScr.info1.addInfo("Đã " + (ModFunc.isInventory ? "bật" : "tắt") + " hiển thị túi đồ", 0);
+						break;
+					case 5:
+						ModFunc.changeStatusEffectInven();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isEffectInven ? "bật" : "tắt") + " hiệu ứng túi đồ", 0);
+						break;
+				}
 				break;
 			case 3:
-				ModFunc.changeStatusShowID();
-				GameScr.info1.addInfo("Đã " + (ModFunc.isShowID ? "bật" : "tắt") + " hiển thị ID", 0);
-				break;
-			case 4:
-				ModFunc.chanegStatusInventory();
-				GameScr.info1.addInfo("Đã " + (ModFunc.isInventory ? "bật" : "tắt") + " hiển thị túi đồ", 0);
-				break;
-			case 5:
-				ModFunc.changeStatusEffectInven();
-				GameScr.info1.addInfo("Đã " + (ModFunc.isEffectInven ? "bật" : "tắt") + " hiệu ứng túi đồ", 0);
-				break;
-			}
-			break;
-		case 3:
-			switch (selectedInTab)
-			{
-			case 0:
-				ModFunc.GI().isIntroOff = !ModFunc.GI().isIntroOff;
-				Rms.saveRMSInt("IntroOff", ModFunc.GI().isIntroOff ? 1 : 0);
-				GameScr.info1.addInfo("Đã " + (ModFunc.GI().isIntroOff ? "bật" : "tắt") + " intro", 0);
-				break;
-			case 1:
-				ModFunc.changeStatusBackground();
-				GameScr.info1.addInfo("Đã " + (ModFunc.GiamDungLuong ? "bật" : "tắt") + " giảm dung lượng", 0);
-				break;
-			case 2:
-				if (Main.isIPhone)
+				switch (selectedInTab)
 				{
-					ModFunc.changeStatusEditButton();
-					GameScr.info1.addInfo("Đã " + (ModFunc.isEditButton ? "bật" : "tắt") + " chỉnh sửa nút", 0);
-				}
-				else
-				{
-					GameScr.info1.addInfo("Chỉnh sửa nút không hỗ trợ trên PC", 0);
+					case 0:
+						ModFunc.GI().isIntroOff = !ModFunc.GI().isIntroOff;
+						Rms.saveRMSInt("IntroOff", ModFunc.GI().isIntroOff ? 1 : 0);
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isIntroOff ? "bật" : "tắt") + " intro", 0);
+						break;
+					case 1:
+						ModFunc.changeStatusBackground();
+						GameScr.info1.addInfo("Đã " + (ModFunc.GiamDungLuong ? "bật" : "tắt") + " giảm dung lượng", 0);
+						break;
+					case 2:
+						if (Main.isIPhone)
+						{
+							ModFunc.changeStatusEditButton();
+							GameScr.info1.addInfo("Đã " + (ModFunc.isEditButton ? "bật" : "tắt") + " chỉnh sửa nút", 0);
+						}
+						else
+						{
+							GameScr.info1.addInfo("Chỉnh sửa nút không hỗ trợ trên PC", 0);
+						}
+						break;
+					case 3:
+						ModFunc.isFilterItem = !ModFunc.isFilterItem;
+						GameScr.info1.addInfo("Đã " + (ModFunc.isFilterItem ? "bật" : "tắt") + " chế độ lọc đồ", 0);
+						break;
 				}
 				break;
-			case 3:
-				ModFunc.isFilterItem = !ModFunc.isFilterItem;
-				GameScr.info1.addInfo("Đã " + (ModFunc.isFilterItem ? "bật" : "tắt") + " chế độ lọc đồ", 0);
-				break;
-			}
-			break;
 		}
 		SoundMn.gI().GetStrModFunc();
 	}
@@ -11778,82 +12221,82 @@ public class Panel : IActionListener, IChatable
 		}
 		switch (selected)
 		{
-		case 0:
-			GameCanvas.endDlg();
-			if (chatTField == null)
-			{
-				chatTField = new ChatTextField();
-				chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
-				chatTField.initChatTextField();
-				chatTField.parentScreen = GameCanvas.panel;
-			}
-			chatTField.tfChat.setText(string.Empty);
-			chatTField.strChat = mResources.input_Inventory_Pass;
-			chatTField.tfChat.name = mResources.input_Inventory_Pass;
-			chatTField.to = string.Empty;
-			chatTField.isShow = true;
-			chatTField.tfChat.isFocus = true;
-			chatTField.tfChat.setIputType(TField.INPUT_TYPE_NUMERIC);
-			if (GameCanvas.isTouch)
-			{
-				chatTField.tfChat.doChangeToTextBox();
-			}
-			if (!Main.isPC)
-			{
-				chatTField.startChat(this, string.Empty);
-			}
-			if (Main.isWindowsPhone)
-			{
-				chatTField.tfChat.strInfo = chatTField.strChat;
-			}
-			break;
-		case 1:
-			Service.gI().friend(0, -1);
-			InfoDlg.showWait();
-			break;
-		case 2:
-			Service.gI().enemy(0, -1);
-			InfoDlg.showWait();
-			break;
-		case 3:
-			setTypeMessage();
-			if (chatTField == null)
-			{
-				chatTField = new ChatTextField();
-				chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
-				chatTField.initChatTextField();
-				chatTField.parentScreen = GameCanvas.panel;
-			}
-			break;
-		case 4:
-			if (mResources.language == 2)
-			{
-				string url = "http://dragonball.indonaga.com/coda/?username=" + GameCanvas.loginScr.tfUser.getText();
+			case 0:
+				GameCanvas.endDlg();
+				if (chatTField == null)
+				{
+					chatTField = new ChatTextField();
+					chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
+					chatTField.initChatTextField();
+					chatTField.parentScreen = GameCanvas.panel;
+				}
+				chatTField.tfChat.setText(string.Empty);
+				chatTField.strChat = mResources.input_Inventory_Pass;
+				chatTField.tfChat.name = mResources.input_Inventory_Pass;
+				chatTField.to = string.Empty;
+				chatTField.isShow = true;
+				chatTField.tfChat.isFocus = true;
+				chatTField.tfChat.setIputType(TField.INPUT_TYPE_NUMERIC);
+				if (GameCanvas.isTouch)
+				{
+					chatTField.tfChat.doChangeToTextBox();
+				}
+				if (!Main.isPC)
+				{
+					chatTField.startChat(this, string.Empty);
+				}
+				if (Main.isWindowsPhone)
+				{
+					chatTField.tfChat.strInfo = chatTField.strChat;
+				}
+				break;
+			case 1:
+				Service.gI().friend(0, -1);
+				InfoDlg.showWait();
+				break;
+			case 2:
+				Service.gI().enemy(0, -1);
+				InfoDlg.showWait();
+				break;
+			case 3:
+				setTypeMessage();
+				if (chatTField == null)
+				{
+					chatTField = new ChatTextField();
+					chatTField.tfChat.y = GameCanvas.h - 35 - ChatTextField.gI().tfChat.height;
+					chatTField.initChatTextField();
+					chatTField.parentScreen = GameCanvas.panel;
+				}
+				break;
+			case 4:
+				if (mResources.language == 2)
+				{
+					string url = "http://dragonball.indonaga.com/coda/?username=" + GameCanvas.loginScr.tfUser.getText();
+					hideNow();
+					try
+					{
+						GameMidlet.instance.platformRequest(url);
+						break;
+					}
+					catch (Exception ex)
+					{
+						ex.StackTrace.ToString();
+						break;
+					}
+				}
 				hideNow();
-				try
+				if (Char.myCharz().taskMaint.taskId <= 10)
 				{
-					GameMidlet.instance.platformRequest(url);
-					break;
+					GameCanvas.startOKDlg(mResources.finishBomong);
 				}
-				catch (Exception ex)
+				else
 				{
-					ex.StackTrace.ToString();
-					break;
+					MoneyCharge.gI().switchToMe();
 				}
-			}
-			hideNow();
-			if (Char.myCharz().taskMaint.taskId <= 10)
-			{
-				GameCanvas.startOKDlg(mResources.finishBomong);
-			}
-			else
-			{
-				MoneyCharge.gI().switchToMe();
-			}
-			break;
-		case 5:
-			setTypeAuto();
-			break;
+				break;
+			case 5:
+				setTypeAuto();
+				break;
 		}
 	}
 
@@ -11984,13 +12427,13 @@ public class Panel : IActionListener, IChatable
 	{
 		return id switch
 		{
-			4 => 1269146, 
-			1 => 2786816, 
-			5 => 13279744, 
-			3 => 12537346, 
-			2 => 7078041, 
-			6 => 11599872, 
-			_ => -1, 
+			4 => 1269146,
+			1 => 2786816,
+			5 => 13279744,
+			3 => 12537346,
+			2 => 7078041,
+			6 => 11599872,
+			_ => -1,
 		};
 	}
 
@@ -12002,26 +12445,26 @@ public class Panel : IActionListener, IChatable
 		}
 		switch (lv)
 		{
-		case 0:
-		case 1:
-			return 4;
-		case 2:
-		case 3:
-			return 1;
-		case 4:
-		case 5:
-			return 2;
-		case 6:
-		case 7:
-			return 3;
-		case 8:
-			return 5;
-		case 9:
-			return 6;
-		case 10:
-			return 0;
-		default:
-			return 0;
+			case 0:
+			case 1:
+				return 4;
+			case 2:
+			case 3:
+				return 1;
+			case 4:
+			case 5:
+				return 2;
+			case 6:
+			case 7:
+				return 3;
+			case 8:
+				return 5;
+			case 9:
+				return 6;
+			case 10:
+				return 0;
+			default:
+				return 0;
 		}
 	}
 
@@ -12030,33 +12473,33 @@ public class Panel : IActionListener, IChatable
 		mFont result = mFont.tahoma_7;
 		switch (color)
 		{
-		case -1:
-			result = mFont.tahoma_7;
-			break;
-		case 0:
-			result = mFont.tahoma_7b_dark;
-			break;
-		case 1:
-			result = mFont.tahoma_7b_green;
-			break;
-		case 2:
-			result = mFont.tahoma_7b_blue;
-			break;
-		case 3:
-			result = mFont.tahoma_7b_blue;
-			break;
-		case 4:
-			result = mFont.tahoma_7b_blue;
-			break;
-		case 5:
-			result = mFont.tahoma_7b_blue;
-			break;
-		case 7:
-			result = mFont.tahoma_7b_red;
-			break;
-		case 8:
-			result = mFont.tahoma_7b_yellow;
-			break;
+			case -1:
+				result = mFont.tahoma_7;
+				break;
+			case 0:
+				result = mFont.tahoma_7b_dark;
+				break;
+			case 1:
+				result = mFont.tahoma_7b_green;
+				break;
+			case 2:
+				result = mFont.tahoma_7b_blue;
+				break;
+			case 3:
+				result = mFont.tahoma_7b_blue;
+				break;
+			case 4:
+				result = mFont.tahoma_7b_blue;
+				break;
+			case 5:
+				result = mFont.tahoma_7b_blue;
+				break;
+			case 7:
+				result = mFont.tahoma_7b_red;
+				break;
+			case 8:
+				result = mFont.tahoma_7b_yellow;
+				break;
 		}
 		return result;
 	}
@@ -12068,88 +12511,88 @@ public class Panel : IActionListener, IChatable
 		int num3 = 15;
 		switch (idOpt)
 		{
-            case 102:
-            {
-                if (imgo_17 != null)
-                {
-                    if (imgo_18 == null)
-                    {
-                        imgo_18 = mSystem.loadImage("/mainImage/star8.png");
-                    }
-                    int baseX = x - num2 + 1 + w - imgo_17.getWidth();
-                    int baseY = y - num2 + h - imgo_17.getHeight();
-                    if (param > 0)
-                    {
-                        Image starImg = (param > 7) ? imgo_18 : imgo_17;
-                        g.drawImage(starImg, baseX, baseY);
-                        // string levelStr = param.ToString();
-                        // int strW = mFont.tahoma_7b_red.getWidth(levelStr);
-                        // int txtX = baseX - strW - 2;
-                        // int txtY = baseY;
-                        // mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
-                    }
-                }
-                else
-                {
-                    imgo_17 = mSystem.loadImage("/mainImage/star.png");
-                    imgo_18 = mSystem.loadImage("/mainImage/star8.png");
-                }
-                break;
-            }
-		case 34:
-			if (imgo_0 != null)
-			{
-				g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
-			}
-			else
-			{
-				imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-			}
-			if (imgo_1 != null)
-			{
-				g.drawImage(imgo_1, x + num2, y - num2 + h - imgo_1.getHeight());
-			}
-			else
-			{
-				imgo_1 = mSystem.loadImage("/mainImage/o_1.png");
-			}
-			break;
-		case 35:
-			if (imgo_0 != null)
-			{
-				g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
-			}
-			else
-			{
-				imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-			}
-			if (imgo_2 != null)
-			{
-				g.drawImage(imgo_2, x + num2, y - num2 + h - imgo_2.getHeight());
-			}
-			else
-			{
-				imgo_2 = mSystem.loadImage("/mainImage/o_2.png");
-			}
-			break;
-		case 36:
-			if (imgo_0 != null)
-			{
-				g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
-			}
-			else
-			{
-				imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-			}
-			if (imgo_3 != null)
-			{
-				g.drawImage(imgo_3, x + num2, y - num2 + h - imgo_3.getHeight());
-			}
-			else
-			{
-				imgo_3 = mSystem.loadImage("/mainImage/o_3.png");
-			}
-			break;
+			case 102:
+				{
+					if (imgo_17 != null)
+					{
+						if (imgo_18 == null)
+						{
+							imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+						}
+						int baseX = x - num2 + 1 + w - imgo_17.getWidth();
+						int baseY = y - num2 + h - imgo_17.getHeight();
+						if (param > 0)
+						{
+							Image starImg = (param > 7) ? imgo_18 : imgo_17;
+							g.drawImage(starImg, baseX, baseY);
+							// string levelStr = param.ToString();
+							// int strW = mFont.tahoma_7b_red.getWidth(levelStr);
+							// int txtX = baseX - strW - 2;
+							// int txtY = baseY;
+							// mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
+						}
+					}
+					else
+					{
+						imgo_17 = mSystem.loadImage("/mainImage/star.png");
+						imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+					}
+					break;
+				}
+			case 34:
+				if (imgo_0 != null)
+				{
+					g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
+				}
+				else
+				{
+					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
+				}
+				if (imgo_1 != null)
+				{
+					g.drawImage(imgo_1, x + num2, y - num2 + h - imgo_1.getHeight());
+				}
+				else
+				{
+					imgo_1 = mSystem.loadImage("/mainImage/o_1.png");
+				}
+				break;
+			case 35:
+				if (imgo_0 != null)
+				{
+					g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
+				}
+				else
+				{
+					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
+				}
+				if (imgo_2 != null)
+				{
+					g.drawImage(imgo_2, x + num2, y - num2 + h - imgo_2.getHeight());
+				}
+				else
+				{
+					imgo_2 = mSystem.loadImage("/mainImage/o_2.png");
+				}
+				break;
+			case 36:
+				if (imgo_0 != null)
+				{
+					g.drawImage(imgo_0, x + num, y - num + h - imgo_0.getHeight());
+				}
+				else
+				{
+					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
+				}
+				if (imgo_3 != null)
+				{
+					g.drawImage(imgo_3, x + num2, y - num2 + h - imgo_3.getHeight());
+				}
+				else
+				{
+					imgo_3 = mSystem.loadImage("/mainImage/o_3.png");
+				}
+				break;
 		}
 	}
 
@@ -12166,229 +12609,229 @@ public class Panel : IActionListener, IChatable
 			}
 			switch (idOpt)
 			{
-			case 102:
-			{
-				int maxStar = 8;
-				if (imgo_17 != null)
-				{
-					if (imgo_19 == null)
+				case 102:
 					{
-						imgo_19 = mSystem.loadImage("/mainImage/starE.png");
+						// int maxStar = 8;
+						if (imgo_17 != null)
+						{
+							if (imgo_19 == null)
+							{
+								imgo_19 = mSystem.loadImage("/mainImage/starE.png");
+							}
+							if (imgo_18 == null)
+							{
+								imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+							}
+							int baseX = x + w - imgo_17.getWidth() + num3 - 5;
+							int baseY = y + h - imgo_17.getHeight() - num5;
+							if (param > 0)
+							{
+								Image starImg = (param > 7) ? imgo_18 : imgo_17;
+								g.drawImage(starImg, baseX, baseY);
+								string levelStr = param.ToString();
+								int strW = mFont.tahoma_7b_red.getWidth(levelStr);
+								int txtX = baseX - strW - 1;
+								int txtY = baseY - 1;
+								mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
+							}
+						}
+						else
+						{
+							imgo_19 = mSystem.loadImage("/mainImage/starE.png");
+							imgo_17 = mSystem.loadImage("/mainImage/star.png");
+							imgo_18 = mSystem.loadImage("/mainImage/star8.png");
+						}
+						break;
 					}
-					if (imgo_18 == null)
+				case 34:
+					if (imgo_0 != null)
 					{
-						imgo_18 = mSystem.loadImage("/mainImage/star8.png");
-					}
-					int baseX = x + w - imgo_17.getWidth() + num3;
-					int baseY = y + h - imgo_17.getHeight() - num5;
-					if (param > 0)
-					{
-						Image starImg = (param > 7) ? imgo_18 : imgo_17;
-						g.drawImage(starImg, baseX, baseY);
-						string levelStr = param.ToString();
-						int strW = mFont.tahoma_7b_red.getWidth(levelStr);
-						int txtX = baseX - strW - 2;
-						int txtY = baseY;
-						mFont.tahoma_7b_red.drawString(g, levelStr, txtX, txtY, 0);
-					}
-				}
-				else
-				{
-					imgo_19 = mSystem.loadImage("/mainImage/starE.png");
-					imgo_17 = mSystem.loadImage("/mainImage/star.png");
-					imgo_18 = mSystem.loadImage("/mainImage/star8.png");
-				}
-				break;
-			}
-			case 34:
-				if (imgo_0 != null)
-				{
-					g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
-				}
-				else
-				{
-					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-				}
-				if (imgo_1 != null)
-				{
-					g.drawImage(imgo_1, x + w - imgo_1.getWidth() + num3, y + h - imgo_1.getHeight() - num5);
-				}
-				else
-				{
-					imgo_1 = mSystem.loadImage("/mainImage/o_1.png");
-				}
-				break;
-			case 35:
-				if (imgo_0 != null)
-				{
-					g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
-				}
-				else
-				{
-					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-				}
-				if (imgo_2 != null)
-				{
-					g.drawImage(imgo_2, x + w - imgo_2.getWidth() + num3, y + h - imgo_2.getHeight() - num5);
-				}
-				else
-				{
-					imgo_2 = mSystem.loadImage("/mainImage/o_2.png");
-				}
-				break;
-			case 36:
-				if (imgo_0 != null)
-				{
-					g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
-				}
-				else
-				{
-					imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
-				}
-				if (imgo_3 != null)
-				{
-					g.drawImage(imgo_3, x + w - imgo_3.getWidth() + num3, y + h - imgo_3.getHeight() - num5);
-				}
-				else
-				{
-					imgo_3 = mSystem.loadImage("/mainImage/o_3.png");
-				}
-				break;
-			case 58:
-				if (item.template.type == 0)
-				{
-					if (imgo_5 != null)
-					{
-						g.drawImage(imgo_5, x + w - imgo_5.getWidth() + num3 - 18, y + h - imgo_5.getHeight() + 1);
+						g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
 					}
 					else
 					{
-						imgo_5 = mSystem.loadImage("/mainImage/11706.png");
+						imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_5.getWidth() + num3 + 8, y + h - imgo_5.getHeight() - 1, 1);
-				}
-				if (item.template.type == 1)
-				{
-					if (imgo_6 != null)
+					if (imgo_1 != null)
 					{
-						g.drawImage(imgo_6, x + w - imgo_6.getWidth() + num3 - 18, y + h - imgo_6.getHeight() + 1);
+						g.drawImage(imgo_1, x + w - imgo_1.getWidth() + num3, y + h - imgo_1.getHeight() - num5);
 					}
 					else
 					{
-						imgo_6 = mSystem.loadImage("/mainImage/11707.png");
+						imgo_1 = mSystem.loadImage("/mainImage/o_1.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_6.getWidth() + num3 + 8, y + h - imgo_6.getHeight() - 1, 1);
-				}
-				if (item.template.type == 2)
-				{
-					if (imgo_7 != null)
+					break;
+				case 35:
+					if (imgo_0 != null)
 					{
-						g.drawImage(imgo_7, x + w - imgo_7.getWidth() + num3 - 18, y + h - imgo_7.getHeight() + 1);
+						g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
 					}
 					else
 					{
-						imgo_7 = mSystem.loadImage("/mainImage/11708.png");
+						imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_7.getWidth() + num3 + 8, y + h - imgo_7.getHeight() - 1, 1);
-				}
-				if (item.template.type == 3)
-				{
-					if (imgo_8 != null)
+					if (imgo_2 != null)
 					{
-						g.drawImage(imgo_8, x + w - imgo_8.getWidth() + num3 - 18, y + h - imgo_8.getHeight() + 1);
+						g.drawImage(imgo_2, x + w - imgo_2.getWidth() + num3, y + h - imgo_2.getHeight() - num5);
 					}
 					else
 					{
-						imgo_8 = mSystem.loadImage("/mainImage/11709.png");
+						imgo_2 = mSystem.loadImage("/mainImage/o_2.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_8.getWidth() + num3 + 8, y + h - imgo_8.getHeight() - 1, 1);
-				}
-				if (item.template.type == 4)
-				{
-					if (imgo_20 != null)
+					break;
+				case 36:
+					if (imgo_0 != null)
 					{
-						g.drawImage(imgo_20, x + w - imgo_20.getWidth() + num3 - 18, y + h - imgo_20.getHeight() + 1);
+						g.drawImage(imgo_0, x + w - imgo_0.getWidth() + num3, y + h - imgo_0.getHeight() - num4);
 					}
 					else
 					{
-						imgo_20 = mSystem.loadImage("/mainImage/13418.png");
+						imgo_0 = mSystem.loadImage("/mainImage/o_00.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_20.getWidth() + num3 + 8, y + h - imgo_20.getHeight() - 1, 1);
-				}
-				break;
-			case 57:
-				if (item.template.type == 21 || item.template.type == 72 || item.template.type == 11 || item.template.type == 23 || item.template.type == 24)
-				{
-					if (imgo_15 != null)
+					if (imgo_3 != null)
 					{
-						g.drawImage(imgo_15, x + w - imgo_15.getWidth() + num3 - 17, y + h - imgo_15.getHeight() + 1);
+						g.drawImage(imgo_3, x + w - imgo_3.getWidth() + num3, y + h - imgo_3.getHeight() - num5);
 					}
 					else
 					{
-						imgo_15 = mSystem.loadImage("/mainImage/20613.png");
+						imgo_3 = mSystem.loadImage("/mainImage/o_3.png");
 					}
-					mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_15.getWidth() + num3 + 11, y + h - imgo_15.getHeight() + 2, 1);
-				}
-				break;
-			case 72:
-				if (item.template.type == 32)
-				{
-					if (imgo_00 != null)
+					break;
+				case 58:
+					if (item.template.type == 0)
 					{
-						g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						if (imgo_5 != null)
+						{
+							g.drawImage(imgo_5, x + w - imgo_5.getWidth() + num3 - 18, y + h - imgo_5.getHeight() + 1);
+						}
+						else
+						{
+							imgo_5 = mSystem.loadImage("/mainImage/11706.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_5.getWidth() + num3 + 8, y + h - imgo_5.getHeight() - 1, 1);
 					}
-					else
+					if (item.template.type == 1)
 					{
-						imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
+						if (imgo_6 != null)
+						{
+							g.drawImage(imgo_6, x + w - imgo_6.getWidth() + num3 - 18, y + h - imgo_6.getHeight() + 1);
+						}
+						else
+						{
+							imgo_6 = mSystem.loadImage("/mainImage/11707.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_6.getWidth() + num3 + 8, y + h - imgo_6.getHeight() - 1, 1);
 					}
-					if (imgo_23 != null)
+					if (item.template.type == 2)
 					{
-						g.drawImage(imgo_23, x + w - imgo_23.getWidth() + num3, y + h - imgo_23.getHeight() - num5);
+						if (imgo_7 != null)
+						{
+							g.drawImage(imgo_7, x + w - imgo_7.getWidth() + num3 - 18, y + h - imgo_7.getHeight() + 1);
+						}
+						else
+						{
+							imgo_7 = mSystem.loadImage("/mainImage/11708.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_7.getWidth() + num3 + 8, y + h - imgo_7.getHeight() - 1, 1);
 					}
-					else
+					if (item.template.type == 3)
 					{
-						imgo_23 = mSystem.loadImage("/mainImage/29505.png");
+						if (imgo_8 != null)
+						{
+							g.drawImage(imgo_8, x + w - imgo_8.getWidth() + num3 - 18, y + h - imgo_8.getHeight() + 1);
+						}
+						else
+						{
+							imgo_8 = mSystem.loadImage("/mainImage/11709.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_8.getWidth() + num3 + 8, y + h - imgo_8.getHeight() - 1, 1);
 					}
-				}
-				if (item.template.type == 5)
-				{
-					if (imgo_00 != null)
+					if (item.template.type == 4)
 					{
-						g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						if (imgo_20 != null)
+						{
+							g.drawImage(imgo_20, x + w - imgo_20.getWidth() + num3 - 18, y + h - imgo_20.getHeight() + 1);
+						}
+						else
+						{
+							imgo_20 = mSystem.loadImage("/mainImage/13418.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_20.getWidth() + num3 + 8, y + h - imgo_20.getHeight() - 1, 1);
 					}
-					else
+					break;
+				case 57:
+					if (item.template.type == 21 || item.template.type == 72 || item.template.type == 11 || item.template.type == 23 || item.template.type == 24)
 					{
-						imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
+						if (imgo_15 != null)
+						{
+							g.drawImage(imgo_15, x + w - imgo_15.getWidth() + num3 - 17, y + h - imgo_15.getHeight() + 1);
+						}
+						else
+						{
+							imgo_15 = mSystem.loadImage("/mainImage/20613.png");
+						}
+						mFont.tahoma_7b_dark.drawString(g, string.Empty + "lv" + param, x + w - imgo_15.getWidth() + num3 + 11, y + h - imgo_15.getHeight() + 2, 1);
 					}
-					if (imgo_4 != null)
+					break;
+				case 72:
+					if (item.template.type == 32)
 					{
-						g.drawImage(imgo_4, x + w - imgo_4.getWidth() + num3, y + h - imgo_4.getHeight() - num5);
+						if (imgo_00 != null)
+						{
+							g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						}
+						else
+						{
+							imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
+						}
+						if (imgo_23 != null)
+						{
+							g.drawImage(imgo_23, x + w - imgo_23.getWidth() + num3, y + h - imgo_23.getHeight() - num5);
+						}
+						else
+						{
+							imgo_23 = mSystem.loadImage("/mainImage/29505.png");
+						}
 					}
-					else
+					if (item.template.type == 5)
 					{
-						imgo_4 = mSystem.loadImage("/mainImage/o_4.png");
+						if (imgo_00 != null)
+						{
+							g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						}
+						else
+						{
+							imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
+						}
+						if (imgo_4 != null)
+						{
+							g.drawImage(imgo_4, x + w - imgo_4.getWidth() + num3, y + h - imgo_4.getHeight() - num5);
+						}
+						else
+						{
+							imgo_4 = mSystem.loadImage("/mainImage/o_4.png");
+						}
 					}
-				}
-				if (item.template.type == 21 || item.template.type == 72 || item.template.type == 11 || item.template.type == 23 || item.template.type == 24)
-				{
-					if (imgo_00 != null)
+					if (item.template.type == 21 || item.template.type == 72 || item.template.type == 11 || item.template.type == 23 || item.template.type == 24)
 					{
-						g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						if (imgo_00 != null)
+						{
+							g.drawImage(imgo_00, x + w - imgo_00.getWidth() + num3, y + h - imgo_00.getHeight() - num4);
+						}
+						else
+						{
+							imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
+						}
+						if (imgo_16 != null)
+						{
+							g.drawImage(imgo_16, x + w - imgo_16.getWidth() + num3, y + h - imgo_16.getHeight() - num5);
+						}
+						else
+						{
+							imgo_16 = mSystem.loadImage("/mainImage/20606.png");
+						}
 					}
-					else
-					{
-						imgo_00 = mSystem.loadImage("/mainImage/o_00.png");
-					}
-					if (imgo_16 != null)
-					{
-						g.drawImage(imgo_16, x + w - imgo_16.getWidth() + num3, y + h - imgo_16.getHeight() - num5);
-					}
-					else
-					{
-						imgo_16 = mSystem.loadImage("/mainImage/20606.png");
-					}
-				}
-				break;
+					break;
 			}
 		}
 		catch (Exception exception)
@@ -12422,25 +12865,25 @@ public class Panel : IActionListener, IChatable
 		{
 			return id switch
 			{
-				0 => mFont.bigNumber_While, 
-				1 => mFont.bigNumber_green, 
-				3 => mFont.bigNumber_orange, 
-				4 => mFont.bigNumber_blue, 
-				5 => mFont.bigNumber_yellow, 
-				6 => mFont.bigNumber_red, 
-				_ => mFont.bigNumber_While, 
+				0 => mFont.bigNumber_While,
+				1 => mFont.bigNumber_green,
+				3 => mFont.bigNumber_orange,
+				4 => mFont.bigNumber_blue,
+				5 => mFont.bigNumber_yellow,
+				6 => mFont.bigNumber_red,
+				_ => mFont.bigNumber_While,
 			};
 		}
 		return id switch
 		{
-			0 => mFont.tahoma_7b_white, 
-			1 => mFont.tahoma_7b_green, 
-			3 => mFont.tahoma_7b_yellowSmall2, 
-			4 => mFont.tahoma_7b_blue, 
-			5 => mFont.tahoma_7b_yellow, 
-			6 => mFont.tahoma_7b_red, 
-			7 => mFont.tahoma_7b_dark, 
-			_ => mFont.tahoma_7b_white, 
+			0 => mFont.tahoma_7b_white,
+			1 => mFont.tahoma_7b_green,
+			3 => mFont.tahoma_7b_yellowSmall2,
+			4 => mFont.tahoma_7b_blue,
+			5 => mFont.tahoma_7b_yellow,
+			6 => mFont.tahoma_7b_red,
+			7 => mFont.tahoma_7b_dark,
+			_ => mFont.tahoma_7b_white,
 		};
 	}
 
@@ -12599,6 +13042,33 @@ public class Panel : IActionListener, IChatable
 		{
 			newSelected = 0;
 		}
-		setTabInventory(resetSelect);
-	}
+    	setTabInventory(resetSelect);
+    }
+
+    // paint a button for multi-drop toggle or confirm in inventory
+    private void paintMultiDropButton(mGraphics g)
+    {
+        int btnW = 40;
+        int btnH = 16;
+        // reset clip to whole game screen so button appears outside inventory scroll
+        g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+        // place button at the top-right corner of the screen
+        int btnX = GameCanvas.w - btnW - 6;
+        int btnY = 6;
+        // background color depends on mode: active or inactive
+        g.setColor(isMultiDropMode ? 0xECC64B : 0x666666);
+        g.fillRect(btnX, btnY, btnW, btnH, 4);
+        // draw yellow border
+        // g.setColor(0xFFFF00);
+        // g.drawRect(btnX, btnY, btnW, btnH);
+        // draw text label centered on the button
+        string label = isMultiDropMode ? "Vứt" : "Bỏ nhiều";
+		if (isMultiDropMode)
+		{
+       	 	mFont.tahoma_7_grey.drawString(g, label, btnX + btnW / 2, btnY + 2, mFont.CENTER);
+		} else
+		{
+			mFont.tahoma_7_white.drawString(g, label, btnX + btnW / 2, btnY + 2, mFont.CENTER);
+		}
+    }
 }

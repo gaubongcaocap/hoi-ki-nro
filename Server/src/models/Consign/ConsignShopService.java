@@ -39,10 +39,12 @@ public class ConsignShopService {
         List<ConsignItem> its = new ArrayList<>();
         List<ConsignItem> listSort = new ArrayList<>();
         List<ConsignItem> listSort2 = new ArrayList<>();
-        ConsignShopManager.gI().listItem.stream().filter((it) -> (it != null && it.tab == tab && !it.isBuy)).forEachOrdered((it) -> {
-            its.add(it);
-        });
-        its.stream().filter(i -> i != null).sorted(Comparator.comparing(i -> i.lasttime, Comparator.reverseOrder())).forEach(i -> listSort.add(i));
+        ConsignShopManager.gI().listItem.stream().filter((it) -> (it != null && it.tab == tab && !it.isBuy))
+                .forEachOrdered((it) -> {
+                    its.add(it);
+                });
+        its.stream().filter(i -> i != null).sorted(Comparator.comparing(i -> i.lasttime, Comparator.reverseOrder()))
+                .forEach(i -> listSort.add(i));
         if (max.length == 2) {
             if (listSort.size() > max[1]) {
                 for (int i = max[0]; i < max[1]; i++) {
@@ -76,7 +78,8 @@ public class ConsignShopService {
         ConsignShopManager.gI().listItem.stream().filter((it) -> (it != null && !it.isBuy)).forEachOrdered((it) -> {
             its.add(it);
         });
-        its.stream().filter(i -> i != null).sorted(Comparator.comparing(i -> i.lasttime, Comparator.reverseOrder())).forEach(i -> listSort.add(i));
+        its.stream().filter(i -> i != null).sorted(Comparator.comparing(i -> i.lasttime, Comparator.reverseOrder()))
+                .forEach(i -> listSort.add(i));
         return listSort;
     }
 
@@ -216,18 +219,18 @@ public class ConsignShopService {
                 msg.writer().writeByte(0);
                 //////////////////////////
                 msg.writer().writeByte(0);
-//                if (pl.getSession().version >= 237) {
-//                    try {
-//                        Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
-//                        if (plSell != null) {
-//                            msg.writer().writeUTF(plSell.name);
-//                        } else {
-//                            msg.writer().writeUTF("");
-//                        }
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
+                // if (pl.getSession().version >= 237) {
+                // try {
+                // Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
+                // if (plSell != null) {
+                // msg.writer().writeUTF(plSell.name);
+                // } else {
+                // msg.writer().writeUTF("");
+                // }
+                // } catch (Exception e) {
+                // e.printStackTrace();
+                // }
+                // }
             }
             pl.sendMessage(msg);
         } catch (Exception e) {
@@ -252,7 +255,10 @@ public class ConsignShopService {
             return;
         }
         pl.iDMark.setIdItemUpTop(id);
-        NpcService.gI().createMenuConMeo(pl, ConstNpc.UP_TOP_ITEM, -1, "Bạn có muốn đưa vật phẩm '" + ItemService.gI().createNewItem(it.itemId).template.name + "' của bản thân lên trang đầu?\nYêu cầu 5tr vàng.", "Đồng ý", "Từ Chối");
+        NpcService.gI().createMenuConMeo(pl, ConstNpc.UP_TOP_ITEM, -1,
+                "Bạn có muốn đưa vật phẩm '" + ItemService.gI().createNewItem(it.itemId).template.name
+                        + "' của bản thân lên trang đầu?\nYêu cầu 5tr vàng.",
+                "Đồng ý", "Từ Chối");
     }
 
     public void claimOrDel(Player pl, byte action, int id) {
@@ -306,11 +312,13 @@ public class ConsignShopService {
 
     public List<ConsignItem> getItemCanKiGui(Player pl) {
         List<ConsignItem> its = new ArrayList<>();
-        ConsignShopManager.gI().listItem.stream().filter((it) -> (it != null && it.player_sell == pl.id)).forEachOrdered((it) -> {
-            its.add(it);
-        });
+        ConsignShopManager.gI().listItem.stream().filter((it) -> (it != null && it.player_sell == pl.id))
+                .forEachOrdered((it) -> {
+                    its.add(it);
+                });
         pl.inventory.itemsBag.stream().filter((it) -> (itemCanConsign(it))).forEachOrdered((it) -> {
-            its.add(new ConsignItem(InventoryService.gI().getIndexBag(pl, it), it.template.id, (int) pl.id, (byte) 4, -1, -1, it.quantity, (byte) -1, it.itemOptions, false));
+            its.add(new ConsignItem(InventoryService.gI().getIndexBag(pl, it), it.template.id, (int) pl.id, (byte) 4,
+                    -1, -1, it.quantity, (byte) -1, it.itemOptions, false));
         });
         return its;
     }
@@ -382,7 +390,8 @@ public class ConsignShopService {
             switch (moneyType) {
                 case 0:// vàng
                     InventoryService.gI().subQuantityItemsBag(pl, pl.inventory.itemsBag.get(id), quantity);
-                    ConsignShopManager.gI().listItem.add(new ConsignItem(getMaxId() + 1, it.template.id, (int) pl.id, getTabKiGui(it), money, -1, quantity, System.currentTimeMillis(), it.itemOptions, false));
+                    ConsignShopManager.gI().listItem.add(new ConsignItem(getMaxId() + 1, it.template.id, (int) pl.id,
+                            getTabKiGui(it), money, -1, quantity, System.currentTimeMillis(), it.itemOptions, false));
                     InventoryService.gI().sendItemBag(pl);
                     openShopKyGui(pl);
                     Service.gI().sendMoney(pl);
@@ -390,7 +399,8 @@ public class ConsignShopService {
                     break;
                 case 1:// hồng ngọc
                     InventoryService.gI().subQuantityItemsBag(pl, pl.inventory.itemsBag.get(id), quantity);
-                    ConsignShopManager.gI().listItem.add(new ConsignItem(getMaxId() + 1, it.template.id, (int) pl.id, getTabKiGui(it), -1, money, quantity, System.currentTimeMillis(), it.itemOptions, false));
+                    ConsignShopManager.gI().listItem.add(new ConsignItem(getMaxId() + 1, it.template.id, (int) pl.id,
+                            getTabKiGui(it), -1, money, quantity, System.currentTimeMillis(), it.itemOptions, false));
                     InventoryService.gI().sendItemBag(pl);
                     openShopKyGui(pl);
                     Service.gI().sendMoney(pl);
@@ -454,19 +464,19 @@ public class ConsignShopService {
                         msg.writer().writeByte(0);
                         ////////////////////////////
                         msg.writer().writeByte(0);
-//                        int type = pl.getSession().version >= 237 ? 2 : 0;
-//                        msg.writer().writeByte(type);
-//                        if (type == 2) {
-//                            try {
-//                                Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
-//                                if (plSell != null) {
-//                                    msg.writer().writeUTF(plSell.name);
-//                                } else {
-//                                    msg.writer().writeUTF("");
-//                                }
-//                            } catch (Exception e) {
-//                            }
-//                        }
+                        // int type = pl.getSession().version >= 237 ? 2 : 0;
+                        // msg.writer().writeByte(type);
+                        // if (type == 2) {
+                        // try {
+                        // Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
+                        // if (plSell != null) {
+                        // msg.writer().writeUTF(plSell.name);
+                        // } else {
+                        // msg.writer().writeUTF("");
+                        // }
+                        // } catch (Exception e) {
+                        // }
+                        // }
                     }
                 } else {
                     List<ConsignItem> items = getItemKyGui(i);
@@ -502,21 +512,21 @@ public class ConsignShopService {
                             msg.writer().writeShort(it.itemOptions.get(a).param);
                         }
                         msg.writer().writeByte(0); // new item
-                        //////////////////////////////////  
+                        //////////////////////////////////
                         msg.writer().writeByte(0);
-//                        int type = pl.getSession().version >= 237 ? 2 : 0;
-//                        msg.writer().writeByte(type);
-//                        if (type == 2) {
-//                            try {
-//                                Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
-//                                if (plSell != null) {
-//                                    msg.writer().writeUTF(plSell.name);
-//                                } else {
-//                                    msg.writer().writeUTF("");
-//                                }
-//                            } catch (Exception e) {
-//                            }
-//                        }
+                        // int type = pl.getSession().version >= 237 ? 2 : 0;
+                        // msg.writer().writeByte(type);
+                        // if (type == 2) {
+                        // try {
+                        // Player plSell = NDVSqlFetcher.loadById(itk.player_sell);
+                        // if (plSell != null) {
+                        // msg.writer().writeUTF(plSell.name);
+                        // } else {
+                        // msg.writer().writeUTF("");
+                        // }
+                        // } catch (Exception e) {
+                        // }
+                        // }
                     }
                 }
             }

@@ -580,86 +580,90 @@ public class GameCanvas : IActionListener
 			}
 			if (currentScreen != null)
 			{
-				if (ChatPopup.serverChatPopUp != null)
-				{
-					ChatPopup.serverChatPopUp.update();
-					ChatPopup.serverChatPopUp.updateKey();
-				}
-				else if (ChatPopup.currChatPopup != null)
-				{
-					ChatPopup.currChatPopup.update();
-					ChatPopup.currChatPopup.updateKey();
-				}
-				else if (currentDialog != null)
-				{
-					currentDialog.update();
-				}
-				else if (menu.showMenu)
-				{
-					menu.updateMenu();
-					menu.updateMenuKey();
-				}
-				else if (panel.isShow)
-				{
-					panel.update();
-					if (isPointer(panel.X, panel.Y, panel.W, panel.H))
+				// if (!TabControll.Instance.isPointerHoldInTab())
+				// {
+					// Xử lý ChatPopup và các UI khác như trong client gốc
+					if (ChatPopup.serverChatPopUp != null)
 					{
-						isFocusPanel2 = false;
+						ChatPopup.serverChatPopUp.update();
+						ChatPopup.serverChatPopUp.updateKey();
 					}
-					if (panel2 != null && panel2.isShow)
+					else if (ChatPopup.currChatPopup != null)
 					{
-						panel2.update();
-						if (isPointer(panel2.X, panel2.Y, panel2.W, panel2.H))
+						ChatPopup.currChatPopup.update();
+						ChatPopup.currChatPopup.updateKey();
+					}
+					else if (currentDialog != null)
+					{
+						currentDialog.update();
+					}
+					else if (menu.showMenu)
+					{
+						menu.updateMenu();
+						menu.updateMenuKey();
+					}
+					else if (panel.isShow)
+					{
+						panel.update();
+						if (isPointer(panel.X, panel.Y, panel.W, panel.H))
 						{
-							isFocusPanel2 = true;
+							isFocusPanel2 = false;
 						}
-					}
-					if (panel2 != null)
-					{
-						if (isFocusPanel2)
+						if (panel2 != null && panel2.isShow)
 						{
-							panel2.updateKey();
+							panel2.update();
+							if (isPointer(panel2.X, panel2.Y, panel2.W, panel2.H))
+							{
+								isFocusPanel2 = true;
+							}
+						}
+						if (panel2 != null)
+						{
+							if (isFocusPanel2)
+							{
+								panel2.updateKey();
+							}
+							else
+							{
+								panel.updateKey();
+							}
 						}
 						else
 						{
 							panel.updateKey();
 						}
+						if (panel.chatTField != null && panel.chatTField.isShow)
+						{
+							panel.chatTFUpdateKey();
+						}
+						else if (panel2 != null && panel2.chatTField != null && panel2.chatTField.isShow)
+						{
+							panel2.chatTFUpdateKey();
+						}
+						else if ((isPointer(panel.X, panel.Y, panel.W, panel.H) && panel2 != null) || panel2 == null)
+						{
+							panel.updateKey();
+						}
+						else if (panel2 != null && panel2.isShow && isPointer(panel2.X, panel2.Y, panel2.W, panel2.H))
+						{
+							panel2.updateKey();
+						}
+						if (isPointer(panel.X + panel.W, panel.Y, w - panel.W * 2, panel.H) && isPointerJustRelease && panel.isDoneCombine)
+						{
+							panel.hide();
+						}
 					}
-					else
+					if (!isLoading)
 					{
-						panel.updateKey();
+						currentScreen.update();
 					}
-					if (panel.chatTField != null && panel.chatTField.isShow)
+					if (!panel.isShow && ChatPopup.serverChatPopUp == null)
 					{
-						panel.chatTFUpdateKey();
+						currentScreen.updateKey();
 					}
-					else if (panel2 != null && panel2.chatTField != null && panel2.chatTField.isShow)
-					{
-						panel2.chatTFUpdateKey();
-					}
-					else if ((isPointer(panel.X, panel.Y, panel.W, panel.H) && panel2 != null) || panel2 == null)
-					{
-						panel.updateKey();
-					}
-					else if (panel2 != null && panel2.isShow && isPointer(panel2.X, panel2.Y, panel2.W, panel2.H))
-					{
-						panel2.updateKey();
-					}
-					if (isPointer(panel.X + panel.W, panel.Y, w - panel.W * 2, panel.H) && isPointerJustRelease && panel.isDoneCombine)
-					{
-						panel.hide();
-					}
-				}
-				if (!isLoading)
-				{
-					currentScreen.update();
-				}
-				if (!panel.isShow && ChatPopup.serverChatPopUp == null)
-				{
-					currentScreen.updateKey();
-				}
-				Hint.update();
-				SoundMn.gI().update();
+					Hint.update();
+					SoundMn.gI().update();
+				// }
 			}
 			Timer.update();
 			InfoDlg.update();
@@ -2398,6 +2402,7 @@ public class GameCanvas : IActionListener
 				mFont.tahoma_7_yellow.drawString(g, thongBaoTest, xThongBaoTranslate, num, 0);
 				g.setClip(0, 0, w, h);
 			}
+			// TabControll.Instance.paint(g);
 		}
 		catch (Exception)
 		{

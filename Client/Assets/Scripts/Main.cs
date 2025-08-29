@@ -228,6 +228,7 @@ public class Main : MonoBehaviour
 			InfoMe.gI().loadCharId();
 			Panel.loadBg();
 			Menu.loadBg();
+			// TabCommand.loadBG();
 			Key.mapKeyPC();
 			SoundMn.gI().loadSound(TileMap.mapID);
 			g.CreateLineMaterial();

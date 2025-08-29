@@ -292,6 +292,8 @@ public class InventoryService {
 //            case 27:
             case 21:
                 break;
+            case 35:
+                break;
             default:
                 Service.gI().sendThongBaoOK(player.isPet ? ((Pet) player).master : player, "Trang bị không phù hợp!");
                 return sItem;
@@ -336,6 +338,9 @@ public class InventoryService {
             case 23:
             case 24:
                 index = 9;
+                break;
+            case 35:
+                index = 10;
                 break;
 //            case 75:
 //            case 72:

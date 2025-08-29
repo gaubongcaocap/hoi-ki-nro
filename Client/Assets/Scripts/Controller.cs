@@ -3886,7 +3886,8 @@ public class Controller : IMessageHandler
 			case -3:
 			{
 				sbyte num281 = msg.reader().readByte();
-				int param11 = msg.reader().readInt();
+				long param11 = (long)msg.reader().readIntToLongDQT();
+				// cập nhật power/tiềm năng tùy loại
 				if (num281 == 0)
 				{
 					Char.myCharz().cPower += param11;
@@ -3901,10 +3902,13 @@ public class Controller : IMessageHandler
 					Char.myCharz().cTiemNang += param11;
 				}
 				Char.myCharz().applyCharLevelPercent();
+				// Hiển thị text bay lên
 				if (Char.myCharz().cTypePk != 3)
 				{
-					GameScr.startFlyText(((param11 <= 0.0) ? string.Empty : "+") + param11, Char.myCharz().cx, Char.myCharz().cy - Char.myCharz().ch, 0, -4, mFont.GREEN);
-					if (param11 > 0.0 && Char.myCharz().petFollow != null && Char.myCharz().petFollow.smallID == 5002)
+					string flyText = (param11 > 0 ? "+" + param11.ToString() : param11.ToString());
+					GameScr.startFlyText(flyText, Char.myCharz().cx, Char.myCharz().cy - Char.myCharz().ch, 0, -4, mFont.GREEN);
+					// hiệu ứng riêng cho pet theo sau cấp 5002
+					if (param11 > 0 && Char.myCharz().petFollow != null && Char.myCharz().petFollow.smallID == 5002)
 					{
 						ServerEffect.addServerEffect(55, Char.myCharz().petFollow.cmx, Char.myCharz().petFollow.cmy, 1);
 						ServerEffect.addServerEffect(55, Char.myCharz().cx, Char.myCharz().cy, 1);

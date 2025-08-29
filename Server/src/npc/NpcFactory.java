@@ -66,6 +66,8 @@ public class NpcFactory {
                     new VuaVegeta(mapId, status, cx, cy, tempId, avatar);
                 case ConstNpc.CUA_HANG_KY_GUI ->
                     new KyGui(mapId, status, cx, cy, tempId, avatar);
+                case ConstNpc.CUA_HANG_KY_GUI_P2P ->
+                    new KyGuiP2P(mapId, status, cx, cy, tempId, avatar);
                 case ConstNpc.ONG_GOHAN ->
                     new OngGohan(mapId, status, cx, cy, tempId, avatar);
                 case ConstNpc.ONG_MOORI ->
@@ -178,8 +180,8 @@ public class NpcFactory {
                     new HoaHong(mapId, status, cx, cy, tempId, avatar);
                 case ConstNpc.BULMA_THO ->
                     new BulmaTho(mapId, status, cx, cy, tempId, avatar);
-                case ConstNpc.CAY_NEU ->
-                    new CayNeu(mapId, status, cx, cy, tempId, avatar);
+                // case ConstNpc.CAY_NEU ->
+                //     new CayNeu(mapId, status, cx, cy, tempId, avatar);
                 // case ConstNpc.CHI_CHI ->
                 // new ChiChi(mapId, status, cx, cy, tempId, avatar);
                 case ConstNpc.Bill_Bi_Ngo ->

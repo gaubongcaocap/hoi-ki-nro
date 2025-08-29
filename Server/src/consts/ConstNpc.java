@@ -98,6 +98,10 @@ public class ConstNpc {
                         + "Cơ cấu giải thưởng như sau\b(chốt và trao giải ngẫu nhiên từ 20h-23h mỗi ngày)\bTop 1 thưởng 100 ngọc\bTop 2-10 thưởng 20 ngọc\bTop 11-100 thưởng 5 ngọc\bTop 101-1000 thưởng 1 ngọc\n"
                         + "Mỗi ngày các bạn được tặng 1 vé tham dự miễn phí\b(tích lũy tối đa 3 vé) khi thua sẽ mất đi 1 vé\bKhi hết vé bạn phải trả 1 ngọc để đấu tiếp\b(trừ ngọc khi trận đấu kết thúc)\n"
                         + "Bạn không thể thi đấu với đấu thủ\bcó hạng nhỏ hơn mình\bChúc bạn may mắn, chào đoàn kết và quyết thắng";
+
+        public static final String KY_GUI_P2P = "Giao dịch P2P (Peer-to-Peer) là hình thức giao dịch trực tiếp\bgiữa 2 người (mua – bán) không qua trung gian\bKhi người mua đặt lệnh, hệ thống sẽ tạm khóa tài sản của người bán\n"
+                        + "Người mua thanh toán bằng phương thức đã thỏa thuận\bNgười bán xác nhận đã nhận được tiền\bHệ thống sẽ giải phóng vật phẩm và chuyển cho người mua\nSau khi hoàn tất giao dịch thì\bNgười mua có vật phẩm, Người bán có tiền\n"
+                        + "Nếu 1 bên không làm đúng cam kết vui lòng liên hệ Zalo 0836503378 để khiếu nại\bHệ thống sẽ khóa vật phẩm cho đến khi khiếu nại được giải quyết";
         // npcid
         public static final byte ONG_GOHAN = 0;
         public static final byte ONG_PARAGUS = 1;
@@ -178,6 +182,7 @@ public class ConstNpc {
         public static final byte Bill_Bi_Ngo = 107;
         public static final byte BULMA_THO = 109;
         public static final byte NOBITA = 103;
+        public static final byte CUA_HANG_KY_GUI_P2P = 79;
 
         // ----------------------index menu------------------------------------------
         // menu o len tang map mabu

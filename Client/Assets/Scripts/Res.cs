@@ -303,6 +303,35 @@ public class Res
 		return number + string.Empty;
 	}
 
+	public static string formatNumber2(long number)
+	{
+		if (number >= 10_000)
+		{
+			long hundreds = number / 1000; // tính số trăm thật sự
+			return hundreds.ToString() + mResources.hundred;
+		}
+		return number.ToString();
+	}
+
+	public static string formatNumber3(long number)
+	{
+		if (number >= 1_000_000_000)
+		{
+			double val = number / 1_000_000_000.0;
+			return val.ToString("0.#") + mResources.billion; // ví dụ: 1.2 tỷ
+		}
+
+		// >= 100 triệu
+		if (number >= 100_000_000)
+		{
+			double val = number / 1_000_000.0;
+			return val.ToString("0.#") + mResources.million; // ví dụ: 150.5 triệu
+		}
+
+		// nhỏ hơn thì giữ nguyên số
+		return number.ToString("#,0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
+	}
+
 	public static string formatNumber2(double number)
 	{
 		string empty = string.Empty;
