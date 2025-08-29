@@ -7437,9 +7437,9 @@ public class Panel : IActionListener, IChatable
 	private void paintPetSkillInfo(mGraphics g, bool isPet2)
 	{
 		Char pet = (isPet2 ? Char.MyPet2z() : Char.myPetz());
-		mFont.tahoma_7b_white.drawString(g, "HP: " + NinjaUtil.getMoneys(pet.cHP) + "/" + NinjaUtil.getMoneys(pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7b_white.drawString(g, "MP: " + NinjaUtil.getMoneys(pet.cMP) + "/" + NinjaUtil.getMoneys(pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + pet.cCriticalFull + "   " + mResources.armor + ": " + NinjaUtil.getMoneys(pet.cDefull), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7b_white.drawString(g, "HP: " + Res.formatNumber3((long)pet.cHP) + "/" + Res.formatNumber3((long)pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, "MP: " + Res.formatNumber3((long)pet.cMP) + "/" + Res.formatNumber3((long)pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + pet.cCriticalFull + "%   " + mResources.armor + ": " + pet.cDefull.ToString(), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
 		mFont.tahoma_7_yellow.drawString(g, mResources.potential2 + ": " + NinjaUtil.getMoneys(pet.cTiemNang), X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 	}
 
