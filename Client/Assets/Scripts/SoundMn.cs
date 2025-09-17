@@ -273,13 +273,27 @@ public class SoundMn
 		}
 		(bool, string)[][] modFuncByTab = new(bool, string)[4][]
 		{
-			new(bool, string)[5]
+			new(bool, string)[19]
 			{
 				(ModFunc.GI().isHighFps, ModFunc.strHighFps),
 				(ModFunc.GI().isUpdateZones, ModFunc.strUpdateZones),
 				(ModFunc.GI().showCharsInMap, ModFunc.strCharsInMap),
 				(ModFunc.GI().showInfoMe, ModFunc.strInfoMe),
-				(ModFunc.GI().isShowButton, ModFunc.strShowButton)
+				(ModFunc.GI().isShowButton, ModFunc.strShowButton),
+				(ModFunc.GI().isAutoPhaLe, ModFunc.strAutoPhaLe),
+				(ModFunc.GI().isAutoVQMM, ModFunc.strAutoVQMM),
+				(ModFunc.GI().autoWakeUp, ModFunc.strAutoWakeUp),
+				(ModFunc.isAutoLogin, ModFunc.strAutoLogin),
+				(!ModFunc.ModNotLogo && ModFunc.isLogo, ModFunc.strLogo),
+				(!ModFunc.ModNotLogo && ModFunc.isLogoGif, ModFunc.strLogoGif),
+				(ModFunc.AnPlayer, ModFunc.strAnPlayer),
+				(ModFunc.isShowID, ModFunc.strShowID),
+				(ModFunc.isInventory, ModFunc.strInventoryOFF),
+				(ModFunc.isEffectInven, ModFunc.strEffectOff),
+				(ModFunc.GI().isIntroOff, ModFunc.strIntroOff),
+				(ModFunc.GiamDungLuong, ModFunc.strGiamDungLuong),
+				(ModFunc.isEditButton, ModFunc.strEditButton),
+				(ModFunc.isFilterItem, "Lọc đồ")
 			},
 			new(bool, string)[4]
 			{

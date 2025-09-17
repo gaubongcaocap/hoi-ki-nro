@@ -190,6 +190,41 @@ public class Service
 		}
 	}
 
+	public void p2pGiaoDich(sbyte action, int playerID, sbyte index, int num)
+	{
+		Res.outz2("giao dich action = " + action);
+		Message message = null;
+		try
+		{
+			message = new Message((sbyte)(-128));
+			message.writer().writeByte(action);
+			if (action == 0 || action == 1)
+			{
+				Res.outz2(">>>> len playerID =" + playerID);
+				message.writer().writeInt(playerID);
+			}
+			if (action == 2)
+			{
+				Res.outz2("gui len index =" + index + " num= " + num);
+				message.writer().writeByte(index);
+				message.writer().writeInt(num);
+			}
+			if (action == 4)
+			{
+				Res.outz2(">>>> len index =" + index);
+				message.writer().writeByte(index);
+			}
+			session.sendMessage(message);
+		}
+		catch (Exception)
+		{
+		}
+		finally
+		{
+			message.cleanup();
+		}
+	}
+
 	public void sendClientInput(TField[] t)
 	{
 		Message message = null;

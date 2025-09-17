@@ -84,6 +84,7 @@ public class T1 : mResources
 		mResources.rank = "Hạng";
 		mResources.selectServer2 = "Chọn máy chủ";
 		mResources.active_point = "Năng động";
+		mResources.lucky_point = "May mắn";
 		mResources.REGISTERING = "Đang đăng ký";
 		mResources.SENDINGMSG = "Đang gửi tin nhắn..";
 		mResources.SENTMSG = "Đã gửi tin nhắn, xin chờ tin nhắn xác nhận.";
@@ -96,7 +97,7 @@ public class T1 : mResources
 		mResources.ALERT_PRIVATE_PASS_2 = "Mật khẩu bảo vệ chỉ cho nhập số.";
 		mResources.INPUT_PRIVATE_PASS = "Nhập mật khẩu bảo vệ";
 		mResources.change_account = "Đổi tài khoản";
-		mResources.alreadyHadAccount1 = "Bạn đã từng chơi và có tài khoản Ngọc Rồng Online ở máy chủ ";
+		mResources.alreadyHadAccount1 = "Bạn đã từng chơi và có tài khoản Cậu Bé Rồng Online ở máy chủ ";
 		mResources.alreadyHadAccount2 = " từ trước ?";
 		mResources.userBlank = "Bạn chưa nhập email hoặc số di động.";
 		mResources.passwordBlank = "Bạn chưa nhập mật khẩu";
@@ -118,7 +119,7 @@ public class T1 : mResources
 		mResources.acc = "TK";
 		mResources.pwd = "MK";
 		mResources.goToWebForPassword = "Để lấy lại mật khẩu, hãy liên hệ Key Vàng tại Box Zalo (" + ServerListScreen.linkweb + ")";
-		mResources.dragon_ball = "Ngọc rồng";
+		mResources.dragon_ball = "Cậu Bé Rồng";
 		mResources.character = "Nhân vật";
 		mResources.account = "Tài khoản";
 		mResources.account_server = "Máy chủ";
@@ -442,6 +443,7 @@ public class T1 : mResources
 		mResources.not_enough_luong_world_channel = "Bạn không đủ ngọc để chat kênh thế giới";
 		mResources.world_channel_5_luong = "Chat kênh thế giới";
 		mResources.want_to_trade = " muốn giao dịch với bạn, bạn có đồng ý không ?";
+		mResources.want_to_tradeP2P = " muốn giao dịch P2P với bạn, bạn có đồng ý không ?";
 		mResources.hasJustUpgrade1 = "Bạn vừa nâng cấp ";
 		mResources.hasJustUpgrade2 = " sang cấp ";
 		mResources.potential_to_learn = "tiềm năng đến Whis học";

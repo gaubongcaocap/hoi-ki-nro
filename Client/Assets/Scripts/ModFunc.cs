@@ -29,7 +29,7 @@ public class ModFunc : IActionListener
 
 	private static readonly ModFunc Instance = new ModFunc();
 
-	public static string homeUrl = "Huyền Ký Ngọc Rồng";
+	public static string homeUrl = "Cậu Bé Rồng Online";
 
 	public static bool ModNotLogo = false;
 
@@ -331,7 +331,7 @@ public class ModFunc : IActionListener
 
 	public static string strAccManager = "Q.L.T.K";
 
-	public static string strModFunc = "Chức Năng MOD";
+	public static string strModFunc = "Chức Năng Hỗ Trợ";
 
 	public static string strUpdateZones = "Cập Nhật Khu";
 
@@ -894,7 +894,7 @@ public class ModFunc : IActionListener
 	{
 		isOpenThuongDe = true;
 		Service.gI().openMenu(19);
-		Service.gI().confirmMenu(19, 2);
+		Service.gI().confirmMenu(19, 4);
 		Service.gI().confirmMenu(19, 0);
 		isOpenThuongDe = false;
 	}
@@ -928,10 +928,10 @@ public class ModFunc : IActionListener
 	{
 		switch (text)
 		{
-			// case "htl":
-			// 	isInventory = !isInventory;
-			// 	GameScr.info1.addInfo("Hành Trang Lưới: " + (isInventory ? "ON" : "OFF"), 0);
-			// 	return true;
+			case "htl":
+				isInventory = !isInventory;
+				GameScr.info1.addInfo("Hành Trang Lưới: " + (isInventory ? "ON" : "OFF"), 0);
+				return true;
 			case "loadskill":
 				perform(57, null);
 				return true;
@@ -2378,7 +2378,7 @@ public class ModFunc : IActionListener
 	public void ChangeFPSTarget()
 	{
 		Rms.saveRMSInt("isHighFps",1);
-			Application.targetFrameRate = 60;
+		Application.targetFrameRate = 60;
 	}
 
 	public static void changeStatusEffectInven()
@@ -2512,7 +2512,7 @@ public class ModFunc : IActionListener
 
 	public static void LoadLogoImages()
 	{
-		// imgLogoBig = GameCanvas.loadImage("/logoNormal/nrodavutru.png");
+		imgLogoBig = GameCanvas.loadImage("/mainimage/logo1.png");
 		if (imgLogoBig == null)
 		{
 			// 	GameScr.info1.addInfo("Không thể load logo!", 0);
@@ -2666,7 +2666,7 @@ public class ModFunc : IActionListener
 
 	public static string Decrypt(string encryptedText, int keys)
 	{
-		Debug.Log($"Chuỗi nhận được để giải mã: {encryptedText}");
+		// Debug.Log($"Chuỗi nhận được để giải mã: {encryptedText}");
 		if (string.IsNullOrEmpty(encryptedText))
 		{
 			return string.Empty;
@@ -2726,6 +2726,7 @@ public class ModFunc : IActionListener
 		using MemoryStream msDecrypt = new MemoryStream(cipherText);
 		using CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
 		using StreamReader srDecrypt = new StreamReader(csDecrypt);
+		Debug.Log($"Chuỗi đã giải mã: {srDecrypt.ReadToEnd()}");
 		return srDecrypt.ReadToEnd();
 	}
 
@@ -3153,7 +3154,7 @@ public class ModFunc : IActionListener
 		mFont.tahoma_7b_red.drawString(g, chatInfo, menuChatX + 30, menuChatY + 10, mFont.LEFT);
 		Dictionary<string, string> chatCommands = new Dictionary<string, string>
 		{
-			// { "htl", "Bật/tắt hành trang lưới" },
+			{ "htl", "Bật/tắt hành trang lưới" },
 			{ "loadskill", "Tải lại ô skill" },
 			{ "ak", "Bật/tắt tự động tấn công" },
 			{ "ts", "Bật/tắt chế độ tàn sát" },

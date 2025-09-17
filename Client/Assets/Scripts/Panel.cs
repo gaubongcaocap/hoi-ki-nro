@@ -83,6 +83,14 @@ public class Panel : IActionListener, IChatable
 
 	public bool isFriendLock;
 
+	public bool isP2PTrade;
+
+	public int p2pPrice;
+
+	public string p2pBankAccount;
+
+	public int p2pBankId;
+
 	public bool isAccept;
 
 	public bool isFriendAccep;
@@ -7439,7 +7447,7 @@ public class Panel : IActionListener, IChatable
 		Char pet = (isPet2 ? Char.MyPet2z() : Char.myPetz());
 		mFont.tahoma_7b_white.drawString(g, "HP: " + Res.formatNumber3((long)pet.cHP) + "/" + Res.formatNumber3((long)pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
 		mFont.tahoma_7b_white.drawString(g, "MP: " + Res.formatNumber3((long)pet.cMP) + "/" + Res.formatNumber3((long)pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + pet.cCriticalFull + "%   " + mResources.armor + ": " + pet.cDefull.ToString(), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + pet.cCriticalFull + "%   " + mResources.armor + ": " + Res.formatNumber3((long)pet.cDefGoc * 4), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
 		mFont.tahoma_7_yellow.drawString(g, mResources.potential2 + ": " + NinjaUtil.getMoneys(pet.cTiemNang), X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 	}
 
@@ -7614,10 +7622,12 @@ public class Panel : IActionListener, IChatable
 
 	private void paintSkillInfo(mGraphics g)
 	{
-		mFont.tahoma_7_white.drawString(g, "Top " + Char.myCharz().rank, X + 45 + (W - 50) / 2, 2, mFont.CENTER);
+		mFont.tahoma_7_white.drawString(g, "Siêu Hạng TOP " + Char.myCharz().rank, X + 45 + (W - 50) / 2, 2, mFont.CENTER);
 		mFont.tahoma_7_yellow.drawString(g, mResources.potential_point, X + 45 + (W - 50) / 2, 14, mFont.CENTER);
 		mFont.tahoma_7_white.drawString(g, string.Empty + NinjaUtil.getMoneys(Char.myCharz().cTiemNang), X + ((GameCanvas.gameTick % 20 > 10) ? (GameCanvas.gameTick % 4 / 2) : 0) + 45 + (W - 50) / 2, 26, mFont.CENTER);
-		mFont.tahoma_7_yellow.drawString(g, mResources.active_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cNangdong), X + ((GameCanvas.gameTick % 20 > 10) ? (GameCanvas.gameTick % 4 / 2) : 0) + 45 + (W - 50) / 2, 38, mFont.CENTER);
+		string nangDong = mResources.active_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cNangdong);
+		string lucky = mResources.lucky_point + ": " + NinjaUtil.getMoneys(Char.myCharz().cLucky);
+		mFont.tahoma_7_yellow.drawString(g, nangDong + ", " + lucky, X + ((GameCanvas.gameTick % 20 > 10) ? (GameCanvas.gameTick % 4 / 2) : 0) + 45 + (W - 50) / 2, 38, mFont.CENTER);
 	}
 
 	private void paintItemBodyBagInfo(mGraphics g)
@@ -7871,9 +7881,9 @@ public class Panel : IActionListener, IChatable
 	private void paintPetStatusInfo(mGraphics g, bool isPet2)
 	{
 		Char pet = (isPet2 ? Char.MyPet2z() : Char.myPetz());
-		mFont.tahoma_7b_white.drawString(g, "HP: " + Res.formatNumber((long)pet.cHP) + "/" + Res.formatNumber((long)pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7b_white.drawString(g, "MP: " + Res.formatNumber((long)pet.cMP) + "/" + Res.formatNumber((long)pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
-		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + NinjaUtil.getMoneys(pet.cCriticalFull) + "   " + mResources.armor + ": " + NinjaUtil.getMoneys(pet.cDefull), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
+		mFont.tahoma_7b_white.drawString(g, "HP: " + Res.formatNumber3((long)pet.cHP) + "/" + Res.formatNumber3((long)pet.cHPFull), X + 60, 4, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7b_white.drawString(g, "MP: " + Res.formatNumber3((long)pet.cMP) + "/" + Res.formatNumber3((long)pet.cMPFull), X + 60, 16, mFont.LEFT, mFont.tahoma_7b_dark);
+		mFont.tahoma_7_yellow.drawString(g, mResources.critical + ": " + pet.cCriticalFull + "%   " + mResources.armor + ": " + Res.formatNumber3((long)pet.cDefGoc * 4), X + 60, 27, mFont.LEFT, mFont.tahoma_7_grey);
 		mFont.tahoma_7_yellow.drawString(g, mResources.status + ": " + strStatus[pet.petStatus], X + 60, 38, mFont.LEFT, mFont.tahoma_7_grey);
 	}
 
@@ -11975,6 +11985,107 @@ public class Panel : IActionListener, IChatable
 							GameScr.info1.addInfo("Hiển thị nút không hỗ trợ trên PC", 0);
 						}
 						break;
+					case 5:
+						ModFunc.GI().isAutoPhaLe = !ModFunc.GI().isAutoPhaLe;
+						if (ModFunc.GI().isAutoPhaLe)
+						{
+							new Thread(ModFunc.GI().AutoPhaLe).Start();
+						}
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoPhaLe ? "bật" : "tắt") + " tự động pha lê", 0);
+						break;
+					case 6:
+						if (!ModFunc.GI().isAutoVQMM)
+						{
+							hideNow();
+						}
+						ModFunc.GI().isAutoVQMM = !ModFunc.GI().isAutoVQMM;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isAutoVQMM ? "bật" : "tắt") + " tự động vòng quay may mắn", 0);
+						break;
+					case 7:
+						ModFunc.GI().autoWakeUp = !ModFunc.GI().autoWakeUp;
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().autoWakeUp ? "bật" : "tắt") + " Auto Hồi Sinh", 0);
+						break;
+					case 8:
+						if (ModFunc.isAutoLogin)
+						{
+							ModFunc.isAutoLogin = false;
+							ModFunc.autoLogin = null;
+						}
+						else
+						{
+							ModFunc.isAutoLogin = true;
+							ModFunc.autoLogin = new AutoLogin
+							{
+								accAutoLogin = GameCanvas.loginScr.tfUser.getText()
+							};
+						}
+						GameScr.info1.addInfo("Đã " + (ModFunc.isAutoLogin ? "bật" : "tắt") + " tự động đăng nhập", 0);
+						break;
+					case 9:
+						if (!ModFunc.ModNotLogo)
+						{
+							ModFunc.changeStatusLogo();
+							GameScr.info1.addInfo("Đã " + (ModFunc.isLogo ? "bật" : "tắt") + " hiển thị logo", 0);
+						}
+						break;
+					case 10:
+						if (!ModFunc.ModNotLogo && ModFunc.isLogo)
+						{
+							if (!ModFunc.ModNotLogoGif)
+							{
+								ModFunc.changeStatusLogoGif();
+								GameScr.info1.addInfo("Đã " + (ModFunc.isLogoGif ? "bật" : "tắt") + " logo động", 0);
+							}
+							else
+							{
+								GameScr.info1.addInfo("Server Không có Logo GIF Bạn ơi", 0);
+							}
+						}
+						else
+						{
+							GameScr.info1.addInfo("Vui lòng bật logo trước khi bật logo động", 0);
+						}
+						break;
+					case 11:
+						ModFunc.changeStatusAnPlayer();
+						GameScr.info1.addInfo("Đã " + (ModFunc.AnPlayer ? "bật" : "tắt") + " ẩn người chơi", 0);
+						break;
+					case 12:
+						ModFunc.changeStatusShowID();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isShowID ? "bật" : "tắt") + " hiển thị ID", 0);
+						break;
+					case 13:
+						ModFunc.chanegStatusInventory();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isInventory ? "bật" : "tắt") + " hiển thị túi đồ", 0);
+						break;
+					case 14:
+						ModFunc.changeStatusEffectInven();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isEffectInven ? "bật" : "tắt") + " hiệu ứng túi đồ", 0);
+						break;
+					case 15:
+						ModFunc.GI().isIntroOff = !ModFunc.GI().isIntroOff;
+						Rms.saveRMSInt("IntroOff", ModFunc.GI().isIntroOff ? 1 : 0);
+						GameScr.info1.addInfo("Đã " + (ModFunc.GI().isIntroOff ? "bật" : "tắt") + " intro", 0);
+						break;
+					case 16:
+						ModFunc.changeStatusBackground();
+						GameScr.info1.addInfo("Đã " + (ModFunc.GiamDungLuong ? "bật" : "tắt") + " giảm dung lượng", 0);
+						break;
+					case 17:
+						if (Main.isIPhone)
+						{
+							ModFunc.changeStatusEditButton();
+							GameScr.info1.addInfo("Đã " + (ModFunc.isEditButton ? "bật" : "tắt") + " chỉnh sửa nút", 0);
+						}
+						else
+						{
+							GameScr.info1.addInfo("Chỉnh sửa nút không hỗ trợ trên PC", 0);
+						}
+						break;
+					case 18:
+						ModFunc.isFilterItem = !ModFunc.isFilterItem;
+						GameScr.info1.addInfo("Đã " + (ModFunc.isFilterItem ? "bật" : "tắt") + " chế độ lọc đồ", 0);
+						break;
 				}
 				break;
 			case 1:
@@ -12055,8 +12166,8 @@ public class Panel : IActionListener, IChatable
 						GameScr.info1.addInfo("Đã " + (ModFunc.isShowID ? "bật" : "tắt") + " hiển thị ID", 0);
 						break;
 					case 4:
-						// ModFunc.chanegStatusInventory();
-						// GameScr.info1.addInfo("Đã " + (ModFunc.isInventory ? "bật" : "tắt") + " hiển thị túi đồ", 0);
+						ModFunc.chanegStatusInventory();
+						GameScr.info1.addInfo("Đã " + (ModFunc.isInventory ? "bật" : "tắt") + " hiển thị túi đồ", 0);
 						break;
 					case 5:
 						ModFunc.changeStatusEffectInven();
