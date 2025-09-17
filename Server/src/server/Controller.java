@@ -276,6 +276,11 @@ public class Controller implements IMessageHandler {
                         TransactionService.gI().controller(player, _msg);
                     }
                     break;
+                case -128:
+                    if (player != null) {
+                        // P2PTransactionService.gI().controller(player, _msg);
+                    }
+                    break;
                 case -107:
                     if (player != null) {
                         Service.gI().sendChiSoPetGoc(player);

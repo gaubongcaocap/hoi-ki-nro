@@ -3154,7 +3154,7 @@ public class ModFunc : IActionListener
 		mFont.tahoma_7b_red.drawString(g, chatInfo, menuChatX + 30, menuChatY + 10, mFont.LEFT);
 		Dictionary<string, string> chatCommands = new Dictionary<string, string>
 		{
-			// { "htl", "Bật/tắt hành trang lưới" },
+			{ "htl", "Bật/tắt hành trang lưới" },
 			{ "loadskill", "Tải lại ô skill" },
 			{ "ak", "Bật/tắt tự động tấn công" },
 			{ "ts", "Bật/tắt chế độ tàn sát" },
