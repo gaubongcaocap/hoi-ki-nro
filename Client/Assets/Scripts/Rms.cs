@@ -147,13 +147,9 @@ public class Rms
 
 	public static void saveRMSInt(string file, int x)
 	{
-		try
-		{
-			saveRMS(file, new sbyte[1] { (sbyte)x });
-		}
-		catch (Exception)
-		{
-		}
+		// nếu chỉ là flag 0/1 thì ép rõ ràng:
+		sbyte v = (sbyte)((x != 0) ? 1 : 0);
+		saveRMS(file, new sbyte[]{ v });
 	}
 
 	public static string GetiPhoneDocumentsPath()
@@ -163,26 +159,32 @@ public class Rms
 
 	private static void __saveRMS(string filename, sbyte[] data)
 	{
-		string text = GetiPhoneDocumentsPath() + "/" + filename;
-		FileStream fileStream = new FileStream(text, FileMode.Create);
-		fileStream.Write(ArrayCast.cast(data), 0, data.Length);
-		fileStream.Flush();
-		fileStream.Close();
-		Main.setBackupIcloud(text);
+		var path = Path.Combine(GetiPhoneDocumentsPath(), filename);
+		Directory.CreateDirectory(Path.GetDirectoryName(path));
+		using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+		{
+			var bytes = ArrayCast.cast(data);
+			fs.Write(bytes, 0, bytes.Length);
+			fs.Flush(true);
+		}
+		Main.setBackupIcloud(path);
 	}
 
 	private static sbyte[] __loadRMS(string filename)
 	{
 		try
 		{
-			FileStream fileStream = new FileStream(GetiPhoneDocumentsPath() + "/" + filename, FileMode.Open);
-			byte[] array = new byte[fileStream.Length];
-			fileStream.Read(array, 0, array.Length);
-			fileStream.Close();
-			ArrayCast.cast(array);
-			return ArrayCast.cast(array);
+			var path = Path.Combine(GetiPhoneDocumentsPath(), filename);
+			if (!File.Exists(path)) return null;
+			byte[] bytes;
+			using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+			{
+				bytes = new byte[fs.Length];
+				fs.Read(bytes, 0, bytes.Length);
+			}
+			return ArrayCast.cast(bytes);
 		}
-		catch (Exception)
+		catch
 		{
 			return null;
 		}

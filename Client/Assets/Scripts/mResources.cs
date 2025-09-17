@@ -511,6 +511,8 @@ public class mResources
 
 	public static string active_point = string.Empty;
 
+	public static string lucky_point = string.Empty;
+
 	public static string friend = string.Empty;
 
 	public static string enemy = string.Empty;
@@ -927,6 +929,8 @@ public class mResources
 	public static string world_channel_5_luong = string.Empty;
 
 	public static string want_to_trade = string.Empty;
+	
+	public static string want_to_tradeP2P = string.Empty;
 
 	public static string hasJustUpgrade1 = string.Empty;
 

@@ -40,7 +40,8 @@ public class ServerListScreen : mScreen, IActionListener
 
 	public static bool stopDownload;
 
-	public static string linkweb = ModFunc.homeUrl;
+    // Đường dẫn trang đăng ký/giới thiệu khi nhấn "Chơi mới". Bạn có thể thay đổi thành URL mong muốn.
+    public static string linkweb = "https://example.com";
 
 	public static int countDieConnect;
 
@@ -100,46 +101,10 @@ public class ServerListScreen : mScreen, IActionListener
 		GameScr.loadCamera(fullmScreen: true, -1, -1);
 		GameScr.cmx = 100;
 		GameScr.cmy = 200;
-		cmdUpdateServer = new Command
-		{
-			actionChat = delegate (string str)
-			{
-				string text = str;
-				string text2 = str;
-				if (text == null)
-				{
-					text = linkDefault;
-				}
-				else
-				{
-					if (text == null && text2 != null)
-					{
-						if (text2.Equals(string.Empty) || text2.Length < 20)
-						{
-							text2 = linkDefault;
-						}
-						GetServerList(text2);
-					}
-					if (text != null && text2 == null)
-					{
-						if (text.Equals(string.Empty) || text.Length < 20)
-						{
-							text = linkDefault;
-						}
-						GetServerList(text);
-					}
-					if (text != null && text2 != null)
-					{
-						if (text.Length > text2.Length)
-						{
-							GetServerList(text);
-						}
-						else
-						{
-							GetServerList(text2);
-						}
-					}
-				}
+		cmdUpdateServer = new Command {
+			actionChat = delegate(string s) {
+				var input = (s == null || s.Length < 20) ? linkDefault : s; // 20 theo logic cũ
+				GetServerList(input);
 			}
 		};
 	}
@@ -267,27 +232,97 @@ public class ServerListScreen : mScreen, IActionListener
 
 	public static void GetServerList(string str)
 	{
-		lengthServer = new int[3];
-		string[] array = Res.split(str.Trim(), ",", 0);
-		Res.outz("tem leng= " + array.Length);
-		mResources.loadLanguague(sbyte.Parse(array[array.Length - 2]));
-		nameServer = new string[array.Length - 2];
-		address = new string[array.Length - 2];
-		port = new short[array.Length - 2];
-		language = new sbyte[array.Length - 2];
-		hasConnected = new bool[2];
-		for (int i = 0; i < array.Length - 2; i++)
+		if (str == null || str.Trim().Length == 0)
 		{
-			string[] array2 = Res.split(array[i].Trim(), ":", 0);
-			nameServer[i] = array2[0];
-			address[i] = array2[1];
-			port[i] = short.Parse(array2[2]);
-			language[i] = sbyte.Parse(array2[3].Trim());
-			lengthServer[language[i]]++;
+			nameServer = address = null;
+			port = null;
+			language = null;
+			lengthServer = new int[0];
+			hasConnected = new bool[0];
+			serverPriority = 0;
+			return;
 		}
-		serverPriority = sbyte.Parse(array[array.Length - 1]);
+
+		string[] raw = Res.split(str.Trim(), ",", 0);
+		Res.outz("tem leng= " + raw.Length);
+		if (raw.Length < 2) return;
+
+		sbyte uiLang = 0;
+		sbyte.TryParse(raw[raw.Length - 2].Trim(), out uiLang);
+		mResources.loadLanguague(uiLang);
+
+		sbyte prio = 0;
+		sbyte.TryParse(raw[raw.Length - 1].Trim(), out prio);
+		serverPriority = prio;
+
+		int serverCountRaw = (raw.Length - 2 > 0) ? (raw.Length - 2) : 0;
+
+		var serverNames = new System.Collections.Generic.List<string>(serverCountRaw);
+		var serverAddrs = new System.Collections.Generic.List<string>(serverCountRaw);
+		var serverPorts = new System.Collections.Generic.List<short>(serverCountRaw);
+		var serverLangs = new System.Collections.Generic.List<sbyte>(serverCountRaw);
+
+		sbyte maxLang = 0;
+
+		for (int i = 0; i < serverCountRaw; i++)
+		{
+			string entry = raw[i];
+			if (entry == null || entry.Trim().Length == 0) continue;
+
+			string[] parts = Res.split(entry.Trim(), ":", 0);
+			if (parts == null || parts.Length < 4) continue;
+
+			string langStr = parts[parts.Length - 1].Trim();
+			string portStr = parts[parts.Length - 2].Trim();
+
+			string left = string.Join(":", parts, 0, parts.Length - 2);
+			int firstColon = left.IndexOf(':');
+			if (firstColon <= 0 || firstColon >= left.Length - 1) continue;
+
+			string name = left.Substring(0, firstColon).Trim();
+			string addr = left.Substring(firstColon + 1).Trim();
+
+			short p;
+			sbyte langVal;
+			if (name.Length == 0 || addr.Length == 0) continue;
+			if (!short.TryParse(portStr, out p) || p <= 0) continue;
+			if (!sbyte.TryParse(langStr, out langVal)) continue;
+
+			serverNames.Add(name);
+			serverAddrs.Add(addr);
+			serverPorts.Add(p);
+			serverLangs.Add(langVal);
+
+			if (langVal > maxLang) maxLang = langVal;
+		}
+
+		int n = serverNames.Count;
+		nameServer = new string[n];
+		address = new string[n];
+		port = new short[n];
+		language = new sbyte[n];
+
+		for (int i = 0; i < n; i++)
+		{
+			nameServer[i] = serverNames[i];
+			address[i] = serverAddrs[i];
+			port[i] = serverPorts[i];
+			language[i] = serverLangs[i];
+		}
+
+		int langBuckets = (maxLang + 1 > 1) ? (maxLang + 1) : 1;
+		lengthServer = new int[langBuckets];
+		hasConnected = new bool[langBuckets];
+
+		for (int i = 0; i < n; i++)
+		{
+			sbyte langVal = language[i];
+			if (langVal >= 0 && langVal < langBuckets) lengthServer[langVal]++;
+		}
+
 		SaveIP();
 	}
+
 
 	public override void paint(mGraphics g)
 	{
@@ -303,7 +338,8 @@ public class ServerListScreen : mScreen, IActionListener
 		int num2 = 2;
 		mFont.tahoma_7_white.drawStringBorder(g, "v" + GameMidlet.VERSION1 + " (x" + mGraphics.zoomLevel + ")", GameCanvas.w - 2, num2 + 20, 1, mFont.tahoma_7_grey);
 		string empty = string.Empty;
-		empty = ((testConnect != 0) ? (empty + nameServer[ipSelect] + " connected") : (empty + nameServer[ipSelect] + " disconnect"));
+		string serverNameSafe = (nameServer != null && nameServer.Length > ipSelect) ? nameServer[ipSelect] : "Server";
+		empty = (testConnect != 0) ? (serverNameSafe + " connected") : (serverNameSafe + " disconnect");
 		if (mSystem.isTest)
 		{
 			mFont.tahoma_7_white.drawString(g, empty, GameCanvas.w - 2, num2 + 15 + 15, 1, mFont.tahoma_7_grey);
@@ -497,7 +533,10 @@ public class ServerListScreen : mScreen, IActionListener
 	{
 		if (loadScreen)
 		{
-			center = new Command(string.Empty, this, cmd[selected].idAction, null);
+			if (cmd != null && selected >= 0 && selected < cmd.Length && cmd[selected] != null)
+			{
+				center = new Command(string.Empty, this, cmd[selected].idAction, null);
+			}
 		}
 		else
 		{
@@ -885,15 +924,9 @@ public class ServerListScreen : mScreen, IActionListener
 					return;
 				}
 			case 10100:
-				if (GameCanvas.loginScr == null)
-				{
-					GameCanvas.loginScr = new LoginScr();
-				}
-				GameCanvas.loginScr.switchToMe();
-				GameCanvas.connect();
-				Service.gI().login2(string.Empty);
-				GameCanvas.startWaitDlg();
-				LoginScr.serverName = nameServer[ipSelect];
+                // Khi nhấn "Chơi mới" sẽ mở đường dẫn bên ngoài thay vì tạo tài khoản
+                // Sử dụng Application.OpenURL qua mSystem.callHotlinePC để mở linkweb
+                mSystem.callHotlinePC();
 				return;
 			case 5:
 				doUpdateServer();

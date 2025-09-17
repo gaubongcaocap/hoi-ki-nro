@@ -147,6 +147,8 @@ public class Char : IMapObject
 
 	public long cNangdong;
 
+	public long cLucky;
+
 	public double damHP;
 
 	public int damMP;
